@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "alert-mind-agent"
+    app_version: str = "1.0.0"
     host: str = "0.0.0.0"
     port: int = 9000
     alert_mind_debug: bool = False
