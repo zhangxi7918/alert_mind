@@ -7,3 +7,16 @@
 - feat(config): 添加应用配置 Settings 类（2026-05-30）
   - 新增 `app/config.py`，通过 `pydantic_settings.BaseSettings` 定义基础配置项和默认值。
   - 配置 `model_config` 读取 UTF-8 编码的 `.env` 文件、关闭环境变量大小写敏感，并忽略多余配置项。
+  - 增加 `app_version` 配置项，为健康检查等接口提供统一版本来源。
+
+## 服务入口
+
+- feat(app): 初始化 FastAPI 服务入口（2026-05-30）
+  - 将 `app/main.py` 改为 FastAPI 应用入口，从配置读取服务标题和版本。
+  - 添加 lifespan 启动日志、开发期 CORS 中间件，并注册健康检查路由。
+
+## 健康检查接口
+
+- feat(api): 添加健康检查路由（2026-05-30）
+  - 新增 `app/api/health.py`，定义 `APIRouter` 和 `GET /health` 接口。
+  - 接口返回 `status` 与从配置读取的 `version` 字段。
