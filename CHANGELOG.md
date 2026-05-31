@@ -20,3 +20,9 @@
 - feat(api): 添加健康检查路由（2026-05-30）
   - 新增 `app/api/health.py`，定义 `APIRouter` 和 `GET /health` 接口。
   - 接口返回 `status` 与从配置读取的 `version` 字段。
+
+## 向量数据库
+
+- feat(vector-db): 添加 Milvus standalone Docker Compose 配置（2026-05-31）
+  - 新增 `vector-database.yml`，定义 `etcd`、`minio`、`milvus-standalone` 三个服务。
+  - 为 Milvus 持久化数据目录并对外暴露 `19530` 端口。
