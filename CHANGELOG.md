@@ -53,6 +53,10 @@
 - feat(rag): 添加向量写入与查询服务（2026-05-31）
   - 新增 `VectorIndexService`，接收切分后的文档块并返回向量库插入数量。
   - 新增 `VectorSearchService`，按 `rag_top_k` 配置执行相似度查询并返回文档列表。
+- feat(tools): 添加知识库检索工具函数（2026-06-01）
+  - 新增 `retrieve_knowledge` LangChain tool，将向量检索结果按换行拼接为字符串。
+  - 在 `app.tools` 包入口导出 `DEFAULT_LOCAL_AGENT_TOOLS`，集中维护 Agent 默认本地工具列表。
+  - 增加 `langchain` 依赖以支持 `@tool` 装饰器。
 - feat(app): 在 FastAPI lifespan 中接入 Milvus 连接管理（2026-05-31）
   - 服务启动时调用 `vector_store_manager.initialize()`，关闭时调用 `vector_store_manager.close()`。
   - 将 Milvus 生命周期入口从底层 client manager 收口到向量存储管理器。
