@@ -21,6 +21,16 @@
   - 新增 `app/api/health.py`，定义 `APIRouter` 和 `GET /health` 接口。
   - 接口返回 `status` 与从配置读取的 `version` 字段。
 
+## 文件上传接口
+
+- feat(models): 添加文件上传响应模型（2026-06-01）
+  - 新增 `UploadResponse`，统一描述上传文件名、切分 chunk 数量、处理状态与可选消息。
+- feat(api): 添加文件上传入库接口（2026-06-01）
+  - 新增 `POST /files/upload`，接收 `UploadFile` 后异步保存到 `uploads/` 目录。
+  - 上传内容经文档切分服务处理后写入向量库，并返回统一上传响应。
+  - 在 FastAPI 入口以 `/api` 前缀和“文件管理”标签注册文件路由。
+  - 增加 `aiofiles` 与 `python-multipart` 依赖以支持异步文件写入和 multipart 表单解析。
+
 ## 向量数据库
 
 - feat(vector-db): 添加 Milvus standalone Docker Compose 配置（2026-05-31）
