@@ -25,4 +25,10 @@
 
 - feat(vector-db): 添加 Milvus standalone Docker Compose 配置（2026-05-31）
   - 新增 `vector-database.yml`，定义 `etcd`、`minio`、`milvus-standalone` 三个服务。
-  - 为 Milvus 持久化数据目录并对外暴露 `19530` 端口。
+  - 为 Milvus 持久化数据目录并对外暴露 `19531` 端口。
+- feat(milvus): 添加 Milvus collection 连接管理器（2026-05-31）
+  - 新增 `MilvusClientManager`，负责连接 Milvus、创建并加载 `biz` collection、关闭时释放资源。
+  - 为 `biz` collection 定义 `id`、`vector`、`content`、`metadata` 字段，并在向量字段创建 `IVF_FLAT`/`L2` 索引。
+  - 补充 `milvus_host` 与 `milvus_port` 配置项，默认连接本地 `19531` 端口，并统一通过 `_collection_exists()` 判断 collection 是否存在。
+- feat(app): 在 FastAPI lifespan 中接入 Milvus 连接管理（2026-05-31）
+  - 服务启动时调用 `milvus_manager.connect()`，关闭时调用 `milvus_manager.close()`。
