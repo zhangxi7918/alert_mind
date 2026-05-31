@@ -7,12 +7,15 @@ from loguru import logger
 
 from app.api import health
 from app.config import config
+from app.core.milvus_client import milvus_manager
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     logger.info("服务启动中...")
+    milvus_manager.connect()
     yield
+    milvus_manager.close()
 
 
 app = FastAPI(
