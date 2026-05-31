@@ -30,6 +30,9 @@
   - 新增 `MilvusClientManager`，负责连接 Milvus、创建并加载 `biz` collection、关闭时释放资源。
   - 为 `biz` collection 定义 `id`、`vector`、`content`、`metadata` 字段，并在向量字段创建 `IVF_FLAT`/`L2` 索引。
   - 补充 `milvus_host` 与 `milvus_port` 配置项，默认连接本地 `19531` 端口，并统一通过 `_collection_exists()` 判断 collection 是否存在。
+- feat(embedding): 添加 DashScope 兼容模式向量化服务（2026-05-31）
+  - 新增 `DashScopeEmbeddings`，实现 LangChain `Embeddings` 的文档批量向量化与查询向量化接口。
+  - 通过 OpenAI 兼容客户端连接 DashScope embedding API，并固定使用 1024 维向量。
 - feat(app): 在 FastAPI lifespan 中接入 Milvus 连接管理（2026-05-31）
   - 服务启动时调用 `milvus_manager.connect()`，关闭时调用 `milvus_manager.close()`。
 

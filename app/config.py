@@ -14,7 +14,9 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 9000
     alert_mind_debug: bool = False
+
     dashscope_api_key: str = ""
+    dashscope_embedding_model: str = "text-embedding-v4"
     
     milvus_host: str = "localhost"
     milvus_port: int = 19531

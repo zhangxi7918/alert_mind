@@ -10,6 +10,7 @@ dependencies = [
     "langchain-milvus>=0.3.3",
     "langchain-text-splitters>=1.1.2",
     "loguru>=0.7.3",
+    "openai>=2.38.0",
     "pydantic-settings>=2.14.1",
     "pymilvus>=2.5.0,<3.0.0",
     "uvicorn>=0.48.0",
