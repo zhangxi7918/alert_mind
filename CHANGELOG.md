@@ -32,3 +32,9 @@
   - 补充 `milvus_host` 与 `milvus_port` 配置项，默认连接本地 `19531` 端口，并统一通过 `_collection_exists()` 判断 collection 是否存在。
 - feat(app): 在 FastAPI lifespan 中接入 Milvus 连接管理（2026-05-31）
   - 服务启动时调用 `milvus_manager.connect()`，关闭时调用 `milvus_manager.close()`。
+
+## 文档切分服务
+
+- feat(splitter): 添加 Markdown 与纯文本切分服务（2026-05-31）
+  - 新增 `DocumentSplitterService`，Markdown 先按 `#`/`##` 标题切分，再按字符数切分，普通文本直接按字符数切分。
+  - 对相邻小于 300 字符的碎片进行合并，并为切分结果补充 `_source` 与 `_file_name` 元数据。

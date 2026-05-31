@@ -15,7 +15,11 @@ class Settings(BaseSettings):
     port: int = 9000
     alert_mind_debug: bool = False
     dashscope_api_key: str = ""
+    
     milvus_host: str = "localhost"
     milvus_port: int = 19531
+
+    chunk_max_size: int = 800
+    chunk_overlap: int = 100
 
 config = Settings()
