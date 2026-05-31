@@ -7,15 +7,15 @@ from loguru import logger
 
 from app.api import health
 from app.config import config
-from app.core.milvus_client import milvus_manager
+from app.services.vector_store_manager import vector_store_manager
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     logger.info("服务启动中...")
-    milvus_manager.connect()
+    vector_store_manager.initialize()
     yield
-    milvus_manager.close()
+    vector_store_manager.close()
 
 
 app = FastAPI(

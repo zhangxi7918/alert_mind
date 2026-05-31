@@ -33,8 +33,19 @@
 - feat(embedding): 添加 DashScope 兼容模式向量化服务（2026-05-31）
   - 新增 `DashScopeEmbeddings`，实现 LangChain `Embeddings` 的文档批量向量化与查询向量化接口。
   - 通过 OpenAI 兼容客户端连接 DashScope embedding API，并固定使用 1024 维向量。
+  - 将 DashScope OpenAI 兼容客户端改为首次向量化时懒加载，避免缺少 API key 时在模块导入阶段报错。
+- feat(vector-store): 添加 LangChain Milvus 向量存储管理器（2026-05-31）
+  - 新增 `VectorStoreManager`，组合 DashScope embedding 服务与 Milvus VectorStore。
+  - 暴露 `add_documents()` 与 `similarity_search()` 方法，统一返回插入 id 列表和相似文档列表。
+  - 新增局部 `LegacyCompatibleMilvus`，按需补齐 langchain-milvus 读取既有 collection 时需要的旧版连接 alias。
+  - 新增 `initialize()` 与 `close()` 管理向量库生命周期，避免模块导入阶段提前连接 Milvus。
+  - 写入文档时自动生成 UUID 主键，匹配 `biz` collection 的非自增 `id` 字段。
+- feat(rag): 添加向量写入与查询服务（2026-05-31）
+  - 新增 `VectorIndexService`，接收切分后的文档块并返回向量库插入数量。
+  - 新增 `VectorSearchService`，按 `rag_top_k` 配置执行相似度查询并返回文档列表。
 - feat(app): 在 FastAPI lifespan 中接入 Milvus 连接管理（2026-05-31）
-  - 服务启动时调用 `milvus_manager.connect()`，关闭时调用 `milvus_manager.close()`。
+  - 服务启动时调用 `vector_store_manager.initialize()`，关闭时调用 `vector_store_manager.close()`。
+  - 将 Milvus 生命周期入口从底层 client manager 收口到向量存储管理器。
 
 ## 文档切分服务
 
