@@ -4,8 +4,10 @@ from typing import List
 from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_qwq import ChatQwen
+from loguru import logger
 from pydantic import BaseModel
 
+from app.agent.mcp_client import get_mcp_client_with_retry, load_mcp_tools_safe
 from app.agent.aiops.state import PlanExecuteState
 from app.agent.aiops.utils import format_tools_description
 from app.config import config
@@ -60,7 +62,13 @@ planner_prompt = ChatPromptTemplate.from_messages(
 async def planner(state: PlanExecuteState) -> dict[str, List[str]]:
     input_text = state["input"]
     experience_docs = await retrieve_knowledge.ainvoke({"query": input_text})
-    tools_description = format_tools_description(DEFAULT_LOCAL_AGENT_TOOLS)
+    mcp_client = await get_mcp_client_with_retry()
+    mcp_tools, error_message = await load_mcp_tools_safe(mcp_client)
+    if error_message:
+        logger.warning("MCP 工具加载失败，planner 将仅使用本地工具：{}", error_message)
+
+    all_tools = [*DEFAULT_LOCAL_AGENT_TOOLS, *mcp_tools]
+    tools_description = format_tools_description(all_tools)
 
     llm = ChatQwen(
         model=config.rag_model,

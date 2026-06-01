@@ -4,7 +4,9 @@ from langchain.agents import create_agent
 from langchain_core.messages import AIMessageChunk, HumanMessage, SystemMessage
 from langchain_qwq import ChatQwen
 from langgraph.checkpoint.memory import MemorySaver
+from loguru import logger
 
+from app.agent.mcp_client import get_mcp_client_with_retry, load_mcp_tools_safe
 from app.config import config
 from app.tools import DEFAULT_LOCAL_AGENT_TOOLS
 
@@ -30,9 +32,15 @@ class RagAgentService:
             return
 
         self._ensure_api_key()
+        mcp_client = await get_mcp_client_with_retry()
+        mcp_tools, error_message = await load_mcp_tools_safe(mcp_client)
+        if error_message:
+            logger.warning("MCP 工具加载失败，将仅使用本地工具：{}", error_message)
+
+        all_tools = [*DEFAULT_LOCAL_AGENT_TOOLS, *mcp_tools]
         self.agent = create_agent(
             self.model,
-            tools=DEFAULT_LOCAL_AGENT_TOOLS,
+            tools=all_tools,
             checkpointer=self.checkpointer,
         )
         self._initialized = True
