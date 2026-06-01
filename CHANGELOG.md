@@ -43,6 +43,8 @@
   - 在 FastAPI 入口以 `/api` 前缀和“智能问答”标签注册聊天路由。
 - fix(agent): 显式配置 DashScope 国内兼容模式地址（2026-06-01）
   - 为 `ChatQwen` 设置 `base_url`，避免默认请求国际站导致国内 DashScope API Key 认证失败。
+- feat(agent): 添加 AIOps 执行状态类型定义（2026-06-01）
+  - 新增 `app/agent/aiops` 子包与 `PlanExecuteState`，统一描述输入、计划、已执行步骤和最终响应字段。
 
 ## 健康检查接口
 
