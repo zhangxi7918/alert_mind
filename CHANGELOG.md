@@ -45,6 +45,10 @@
   - 为 `ChatQwen` 设置 `base_url`，避免默认请求国际站导致国内 DashScope API Key 认证失败。
 - feat(agent): 添加 AIOps 执行状态类型定义（2026-06-01）
   - 新增 `app/agent/aiops` 子包与 `PlanExecuteState`，统一描述输入、计划、已执行步骤和最终响应字段。
+- feat(aiops): 添加 Plan 结构化输出模型和规划提示词（2026-06-01）
+  - 新增 `app/agent/aiops/planner.py`，用 Pydantic `BaseModel` 约束计划输出必须包含 `steps` 字符串数组。
+  - 使用 `ChatPromptTemplate.from_messages()` 定义专家规划器 prompt，预留工具列表、经验上下文和消息占位符。
+  - 实现异步 `planner(state)`，先检索经验文档和格式化工具描述，再通过结构化输出生成计划步骤。
 
 ## 健康检查接口
 
