@@ -15,6 +15,14 @@
   - 将 `app/main.py` 改为 FastAPI 应用入口，从配置读取服务标题和版本。
   - 添加 lifespan 启动日志、开发期 CORS 中间件，并注册健康检查路由。
 
+## RAG Agent 服务
+
+- feat(agent): 添加 RAG Agent 服务封装（2026-06-01）
+  - 新增 `RagAgentService`，组合 `ChatQwen`、`MemorySaver` 和本地知识库工具创建可复用 Agent。
+  - 提供非流式 `query()` 与流式 `query_stream()` 方法，并通过 `session_id` 隔离对话历史。
+- fix(agent): 显式配置 DashScope 国内兼容模式地址（2026-06-01）
+  - 为 `ChatQwen` 设置 `base_url`，避免默认请求国际站导致国内 DashScope API Key 认证失败。
+
 ## 健康检查接口
 
 - feat(api): 添加健康检查路由（2026-05-30）

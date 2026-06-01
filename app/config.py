@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     alert_mind_debug: bool = False
 
     # DashScope 配置
-    dashscope_api_key: str = ""
+    dashscope_api_key: str = "sk-a292c383da6149ed844d82f1af284e50"
     dashscope_embedding_model: str = "text-embedding-v4"
     
     # Milvus 配置
@@ -30,5 +30,6 @@ class Settings(BaseSettings):
 
     # RAG 配置
     rag_top_k: int = 3
+    rag_model: str = "qwen-max"
 
 config = Settings()
