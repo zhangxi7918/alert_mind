@@ -1157,14 +1157,15 @@ class SuperBizAgentApp {
     }
 
     // 发送智能运维请求（SSE 流式模式）
-    async sendAIOpsRequest(loadingMessageElement) {
+    async sendAIOpsRequest(loadingMessageElement, aiopsInput) {
         try {
-            const response = await fetch(`${this.apiBaseUrl}/aiops`, {
+            const response = await fetch(`${this.apiBaseUrl}/aiops/query`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    input: aiopsInput,
                     session_id: this.sessionId
                 })
             });
@@ -1569,8 +1570,12 @@ class SuperBizAgentApp {
             return;
         }
 
+        const typedInput = this.messageInput ? this.messageInput.value.trim() : '';
+        const aiopsInput = typedInput || '请基于知识库中的智能运维经验，对当前常见告警进行分析并给出排查步骤。';
+
         // 新建对话
         this.newChat();
+        this.addMessage('user', aiopsInput);
         
         // 添加"分析中..."的消息（带旋转动画）
         const loadingMessage = this.addLoadingMessage('分析中...');
@@ -1581,7 +1586,7 @@ class SuperBizAgentApp {
         this.updateUI();
 
         try {
-            await this.sendAIOpsRequest(loadingMessage);
+            await this.sendAIOpsRequest(loadingMessage, aiopsInput);
         } catch (error) {
             console.error('智能运维分析失败:', error);
             // 更新消息为错误信息

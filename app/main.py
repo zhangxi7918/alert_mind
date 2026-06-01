@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
+from app.api import aiops
 from app.api import chat
 from app.api import file
 from app.api import health
@@ -40,6 +41,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(chat.router, prefix="/api", tags=["智能问答"])
 app.include_router(file.router, prefix="/api", tags=["文件管理"])
+app.include_router(aiops.router, prefix="/api", tags=["AIOps"])
 
 
 # 挂载静态文件
