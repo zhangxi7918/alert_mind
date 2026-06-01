@@ -1,7 +1,7 @@
 // SuperBizAgent 前端应用
 class SuperBizAgentApp {
     constructor() {
-        this.apiBaseUrl = 'http://localhost:9900/api';
+        this.apiBaseUrl = 'http://localhost:9000/api';
         this.currentMode = 'quick'; // 'quick' 或 'stream'
         this.sessionId = this.generateSessionId();
         this.isStreaming = false;
@@ -687,8 +687,8 @@ class SuperBizAgentApp {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    Id: this.sessionId,
-                    Question: message
+                    session_id: this.sessionId,
+                    question: message
                 })
             });
 
@@ -704,27 +704,8 @@ class SuperBizAgentApp {
                 loadingMessage.parentNode.removeChild(loadingMessage);
             }
             
-            // 统一响应格式：检查 data.code 或 data.message 判断请求是否成功
-            if (data.code === 200 || data.message === 'success') {
-                // data.data 是 ChatResponse 对象
-                const chatResponse = data.data;
-                
-                if (chatResponse && chatResponse.success) {
-                    // 成功：添加实际响应消息（即使 answer 为空也显示）
-                    const answer = chatResponse.answer || '（无回复内容）';
-                    this.addMessage('assistant', answer);
-                } else if (chatResponse && chatResponse.errorMessage) {
-                    // 业务错误
-                    throw new Error(chatResponse.errorMessage);
-                } else {
-                    // 兜底：尝试显示任何可用内容
-                    const fallbackAnswer = chatResponse?.answer || chatResponse?.errorMessage || '服务返回了空内容';
-                    this.addMessage('assistant', fallbackAnswer);
-                }
-            } else {
-                // HTTP 成功但业务失败
-                throw new Error(data.message || '请求失败');
-            }
+            const answer = data.answer || '（无回复内容）';
+            this.addMessage('assistant', answer);
         } catch (error) {
             // 出错时也要移除等待提示消息
             if (loadingMessage && loadingMessage.parentNode) {
@@ -737,14 +718,14 @@ class SuperBizAgentApp {
     // 发送流式消息
     async sendStreamMessage(message) {
         try {
-            const response = await fetch(`${this.apiBaseUrl}/chat_stream`, {
+            const response = await fetch(`${this.apiBaseUrl}/chat/stream`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    Id: this.sessionId,
-                    Question: message
+                    session_id: this.sessionId,
+                    question: message
                 })
             });
 
@@ -827,7 +808,7 @@ class SuperBizAgentApp {
                                             this.highlightCodeBlocks(messageContent);
                                             this.scrollToBottom();
                                         }
-                                    } else if (sseMessage.type === 'done') {
+                                    } else if (sseMessage.type === 'done' || sseMessage.type === 'complete') {
                                         console.log('[SSE调试] 收到done标记，流结束');
                                         this.handleStreamComplete(assistantMessageElement, fullResponse);
                                         return;
@@ -1133,7 +1114,7 @@ class SuperBizAgentApp {
             formData.append('file', file);
 
             // 发送上传请求
-            const response = await fetch(`${this.apiBaseUrl}/upload`, {
+            const response = await fetch(`${this.apiBaseUrl}/files/upload`, {
                 method: 'POST',
                 body: formData
             });
@@ -1144,7 +1125,7 @@ class SuperBizAgentApp {
 
             const data = await response.json();
 
-            if ((data.code === 200 || data.message === 'success') && data.data) {
+            if (data.status === 'success') {
                 // 在聊天界面显示上传成功消息
                 const successMessage = `${file.name} 上传到知识库成功`;
                 this.addMessage('assistant', successMessage, false, true);
