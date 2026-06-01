@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
+from app.api import chat
 from app.api import file
 from app.api import health
 from app.config import config
@@ -34,4 +35,5 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(chat.router, prefix="/api", tags=["智能问答"])
 app.include_router(file.router, prefix="/api", tags=["文件管理"])

@@ -20,6 +20,12 @@
 - feat(agent): 添加 RAG Agent 服务封装（2026-06-01）
   - 新增 `RagAgentService`，组合 `ChatQwen`、`MemorySaver` 和本地知识库工具创建可复用 Agent。
   - 提供非流式 `query()` 与流式 `query_stream()` 方法，并通过 `session_id` 隔离对话历史。
+- feat(models): 添加聊天请求模型（2026-06-01）
+  - 新增 `ChatRequest`，统一描述用户问题 `question` 与会话标识 `session_id`。
+- feat(api): 添加 RAG 聊天接口（2026-06-01）
+  - 新增 `POST /chat` 非流式问答接口，返回 `answer` 与 `session_id`。
+  - 新增 `POST /chat/stream` SSE 流式问答接口，将 Agent chunk 序列化为 JSON 事件数据。
+  - 在 FastAPI 入口以 `/api` 前缀和“智能问答”标签注册聊天路由。
 - fix(agent): 显式配置 DashScope 国内兼容模式地址（2026-06-01）
   - 为 `ChatQwen` 设置 `base_url`，避免默认请求国际站导致国内 DashScope API Key 认证失败。
 
