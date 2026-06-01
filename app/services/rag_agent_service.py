@@ -1,0 +1,96 @@
+from collections.abc import AsyncIterator
+
+from langchain.agents import create_agent
+from langchain_core.messages import AIMessageChunk, HumanMessage, SystemMessage
+from langchain_qwq import ChatQwen
+from langgraph.checkpoint.memory import MemorySaver
+
+from app.config import config
+from app.tools import DEFAULT_LOCAL_AGENT_TOOLS
+
+DASHSCOPE_COMPATIBLE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+
+
+class RagAgentService:
+    def __init__(self) -> None:
+        self._api_key = config.dashscope_api_key or "missing-dashscope-api-key"
+        self.model = ChatQwen(
+            model=config.rag_model,
+            api_key=self._api_key,
+            base_url=DASHSCOPE_COMPATIBLE_BASE_URL,
+            streaming=True,
+        )
+        self.checkpointer = MemorySaver()
+        self.system_prompt = self._build_system_prompt()
+        self.agent = None
+        self._initialized = False
+
+    async def _initialize_agent(self) -> None:
+        if self._initialized:
+            return
+
+        self._ensure_api_key()
+        self.agent = create_agent(
+            self.model,
+            tools=DEFAULT_LOCAL_AGENT_TOOLS,
+            checkpointer=self.checkpointer,
+        )
+        self._initialized = True
+
+    async def query(self, question: str, session_id: str) -> str:
+        await self._initialize_agent()
+
+        result = await self.agent.ainvoke(
+            self._build_input(question),
+            config=self._build_config(session_id),
+        )
+        return result["messages"][-1].content
+
+    async def query_stream(
+        self,
+        question: str,
+        session_id: str,
+    ) -> AsyncIterator[dict[str, str]]:
+        await self._initialize_agent()
+
+        async for token, _metadata in self.agent.astream(
+            self._build_input(question),
+            config=self._build_config(session_id),
+            stream_mode="messages",
+        ):
+            if not isinstance(token, AIMessageChunk):
+                continue
+
+            for block in token.content_blocks:
+                if block.get("type") == "text":
+                    yield {"type": "content", "data": block.get("text", "")}
+
+        yield {"type": "complete"}
+
+    def _build_system_prompt(self) -> str:
+        return (
+            "你是一个专业的运维助手。"
+            "回答问题前，先使用工具检索知识库中相关的故障、告警和处理文档；"
+            "再基于检索结果给出清晰、可执行的分析和处置建议。"
+        )
+
+    def _build_input(
+        self,
+        question: str,
+    ) -> dict[str, list[SystemMessage | HumanMessage]]:
+        return {
+            "messages": [
+                SystemMessage(content=self.system_prompt),
+                HumanMessage(content=question),
+            ],
+        }
+
+    def _build_config(self, session_id: str) -> dict[str, dict[str, str]]:
+        return {"configurable": {"thread_id": session_id}}
+
+    def _ensure_api_key(self) -> None:
+        if not config.dashscope_api_key:
+            raise RuntimeError("DASHSCOPE_API_KEY 未配置，无法调用 RAG Agent 模型。")
+
+
+rag_agent_service = RagAgentService()
