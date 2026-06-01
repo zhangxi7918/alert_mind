@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     milvus_host: str = "localhost"
     milvus_port: int = 19531
 
+    # MCP 配置
+    mcp_monitor_transport: str = "streamable-http"
+    mcp_monitor_url: str = "http://localhost:8004/mcp"
+
     # 文档分块配置
     chunk_max_size: int = 800
     chunk_overlap: int = 100

@@ -32,6 +32,9 @@
 
 ## RAG Agent 服务
 
+- feat(mcp): 添加模拟监控 MCP 服务入口（2026-06-01）
+  - 新增 `mcp_servers/monitor_server.py`，通过 FastMCP 暴露 `query_metrics` 与 `query_alerts` 两个模拟监控工具。
+  - 补充 MCP 监控服务地址和传输协议配置，并添加 `fastmcp` 依赖。
 - feat(agent): 添加 RAG Agent 服务封装（2026-06-01）
   - 新增 `RagAgentService`，组合 `ChatQwen`、`MemorySaver` 和本地知识库工具创建可复用 Agent。
   - 提供非流式 `query()` 与流式 `query_stream()` 方法，并通过 `session_id` 隔离对话历史。
