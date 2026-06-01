@@ -53,6 +53,19 @@
   - 新增异步 `executor(state)`，从 `plan` 取出当前步骤并交给 LangGraph ReAct Agent 自动完成工具调用循环。
   - 执行完成后记录 `(当前步骤, 执行结果)` 到 `past_steps`，并移除已执行的计划步骤。
   - 包入口改为懒加载导出，避免导入单个子模块时提前加载其他 Agent 依赖，并兼容手动调用时缺少 `past_steps` 的状态增量。
+- feat(aiops): 添加计划重审裁判节点（2026-06-01）
+  - 新增异步 `replanner(state)`，将原始任务、已完成步骤和剩余计划交给 LLM 判断是否完成。
+  - 使用结构化输出约束裁判返回最终 `response` 或调整后的 `plan`，用于驱动后续 Graph 分支。
+- feat(aiops): 添加 Plan-Execute 图服务封装（2026-06-01）
+  - 新增 `AIOpsService`，用 LangGraph `StateGraph` 串联 planner、executor、replanner 三个节点。
+  - 暴露异步 `run(input_text)` 入口，初始化图状态并返回最终执行状态。
+- feat(api): 添加 AIOps SSE 查询接口（2026-06-01）
+  - 新增 `AiopsRequest` 请求模型和 `POST /api/aiops/query` 路由。
+  - 接口通过 `EventSourceResponse` 逐步输出 Plan-Execute Graph 节点执行结果。
+- fix(aiops): 对齐 AI Ops 前端按钮与 SSE 接口契约（2026-06-01）
+  - 前端按钮改为请求 `POST /api/aiops/query`，并提交 `input` 字段作为智能运维分析任务。
+  - AIOps SSE 接口将 Graph 节点输出转换为前端可渲染的计划、步骤完成和报告事件。
+  - 为 `static/app.js` 引入版本查询串，避免 Chrome 继续复用旧脚本导致按钮请求旧路径。
 
 ## 健康检查接口
 
