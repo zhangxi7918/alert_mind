@@ -14,6 +14,16 @@
 - feat(app): 初始化 FastAPI 服务入口（2026-05-30）
   - 将 `app/main.py` 改为 FastAPI 应用入口，从配置读取服务标题和版本。
   - 添加 lifespan 启动日志、开发期 CORS 中间件，并注册健康检查路由。
+- feat(app): 挂载静态前端资源并提供首页入口（2026-06-01）
+  - 新增 `/static` 静态资源挂载，支持浏览器直接访问前端页面与资源。
+  - 新增根路径 `/`，优先返回 `static/index.html`，缺失时回退到 API 欢迎信息。
+
+## 前端聊天界面
+
+- feat(static): 添加智能 AlertMind 助手 Web 聊天界面（2026-06-01）
+  - 新增 `static/index.html`、`static/app.js` 与 `static/styles.css`，提供侧边栏、聊天区、模式选择、文件上传入口和 AI Ops 操作入口。
+  - 前端支持快速问答、流式问答、Markdown/代码高亮渲染、本地历史对话管理与通知反馈。
+  - 补充响应式布局、消息气泡、加载遮罩、上传状态和智能运维详情折叠样式。
 
 ## RAG Agent 服务
 

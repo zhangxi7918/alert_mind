@@ -1,8 +1,11 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from app.api import chat
@@ -37,3 +40,20 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(chat.router, prefix="/api", tags=["智能问答"])
 app.include_router(file.router, prefix="/api", tags=["文件管理"])
+
+
+# 挂载静态文件
+static_dir = "static"
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+@app.get("/")
+async def root():
+    """返回首页"""
+    index_path = os.path.join(static_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {
+        "message": f"Welcome to {config.app_name} API",
+        "version": config.app_version,
+        "docs": "/docs"
+    }
