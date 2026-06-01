@@ -49,6 +49,10 @@
   - 新增 `app/agent/aiops/planner.py`，用 Pydantic `BaseModel` 约束计划输出必须包含 `steps` 字符串数组。
   - 使用 `ChatPromptTemplate.from_messages()` 定义专家规划器 prompt，预留工具列表、经验上下文和消息占位符。
   - 实现异步 `planner(state)`，先检索经验文档和格式化工具描述，再通过结构化输出生成计划步骤。
+- feat(aiops): 添加计划步骤执行器（2026-06-01）
+  - 新增异步 `executor(state)`，从 `plan` 取出当前步骤并交给 LangGraph ReAct Agent 自动完成工具调用循环。
+  - 执行完成后记录 `(当前步骤, 执行结果)` 到 `past_steps`，并移除已执行的计划步骤。
+  - 包入口改为懒加载导出，避免导入单个子模块时提前加载其他 Agent 依赖，并兼容手动调用时缺少 `past_steps` 的状态增量。
 
 ## 健康检查接口
 
