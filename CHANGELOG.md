@@ -24,6 +24,11 @@
   - 新增 `static/index.html`、`static/app.js` 与 `static/styles.css`，提供侧边栏、聊天区、模式选择、文件上传入口和 AI Ops 操作入口。
   - 前端支持快速问答、流式问答、Markdown/代码高亮渲染、本地历史对话管理与通知反馈。
   - 补充响应式布局、消息气泡、加载遮罩、上传状态和智能运维详情折叠样式。
+- fix(static): 将前端 API 基础地址改为本地 9000 端口（2026-06-01）
+  - 把 `apiBaseUrl` 从 `http://localhost:9900/api` 调整为 `http://localhost:9000/api`，避免请求打到其他本地服务。
+- fix(static): 对齐前端请求与 FastAPI 接口契约（2026-06-01）
+  - 聊天接口改为提交 `question` 与 `session_id`，避免因字段名不匹配返回 422。
+  - 流式聊天路径改为 `/api/chat/stream`，文件上传路径改为 `/api/files/upload`，并按当前后端响应结构判断成功。
 
 ## RAG Agent 服务
 
