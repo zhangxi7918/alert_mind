@@ -9,6 +9,7 @@ from langchain_text_splitters import (
 from app.config import config
 
 MIN_CHUNK_SIZE = 300
+MARKDOWN_EXTENSIONS = {".md", ".markdown"}
 MARKDOWN_HEADERS_TO_SPLIT_ON = [
     ("#", "Header 1"),
     ("##", "Header 2"),
@@ -39,7 +40,7 @@ class DocumentSplitterService:
         return self._with_file_metadata(documents, file_path)
 
     def split_document(self, content: str, file_path: str) -> list[Document]:
-        if file_path.lower().endswith(".md"):
+        if Path(file_path).suffix.lower() in MARKDOWN_EXTENSIONS:
             return self.split_markdown(content, file_path)
 
         return self.split_text(content, file_path)

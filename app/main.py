@@ -15,6 +15,20 @@ from app.api import health
 from app.config import config
 from app.services.vector_store_manager import vector_store_manager
 
+NO_CACHE_HEADERS = {
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
+
+
+class NoCacheStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        response.headers.update(NO_CACHE_HEADERS)
+
+        return response
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
@@ -46,14 +60,14 @@ app.include_router(aiops.router, prefix="/api", tags=["AIOps"])
 
 # 挂载静态文件
 static_dir = "static"
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+app.mount("/static", NoCacheStaticFiles(directory=static_dir), name="static")
 
 @app.get("/")
 async def root():
     """返回首页"""
     index_path = os.path.join(static_dir, "index.html")
     if os.path.exists(index_path):
-        return FileResponse(index_path)
+        return FileResponse(index_path, headers=NO_CACHE_HEADERS)
     return {
         "message": f"Welcome to {config.app_name} API",
         "version": config.app_version,
