@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from app.agent.mcp_client import get_mcp_client_with_retry, load_mcp_tools_safe
 from app.agent.aiops.state import PlanExecuteState
+from app.agent.aiops.streaming import emit_status
 from app.agent.aiops.utils import format_tools_description
 from app.config import config, get_dashscope_api_key
 from app.tools import DEFAULT_LOCAL_AGENT_TOOLS
@@ -61,6 +62,7 @@ planner_prompt = ChatPromptTemplate.from_messages(
 
 async def planner(state: PlanExecuteState) -> dict[str, List[str]]:
     input_text = state["input"]
+    emit_status("正在检索知识库经验并准备诊断计划...")
     experience_docs = await retrieve_knowledge.ainvoke({"query": input_text})
     mcp_client = await get_mcp_client_with_retry()
     mcp_tools, error_message = await load_mcp_tools_safe(mcp_client)
@@ -69,6 +71,7 @@ async def planner(state: PlanExecuteState) -> dict[str, List[str]]:
 
     all_tools = [*DEFAULT_LOCAL_AGENT_TOOLS, *mcp_tools]
     tools_description = format_tools_description(all_tools)
+    emit_status("知识库与工具信息已就绪，正在生成执行计划...")
 
     llm = ChatQwen(
         model=config.rag_model,
@@ -84,4 +87,14 @@ async def planner(state: PlanExecuteState) -> dict[str, List[str]]:
             "experience_context": experience_docs or "暂无相关经验文档。",
         }
     )
+    if not plan_result or not plan_result.steps:
+        logger.warning("AIOps planner 结构化输出为空，使用保底诊断计划")
+        return {
+            "plan": [
+                "查询当前监控告警和关键指标，确认是否存在活跃异常。",
+                "结合知识库经验分析可能根因，并补充必要的日志或指标检查。",
+                "根据已获取信息整理排查结论和处理建议。",
+            ]
+        }
+
     return {"plan": plan_result.steps}

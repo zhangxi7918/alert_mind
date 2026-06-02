@@ -988,8 +988,284 @@ body {
 
 .aiops-message .message-content {
     max-width: 100%;
-    background: rgba(26, 115, 232, 0.05);
-    border: 1px solid rgba(26, 115, 232, 0.2);
+    background: #ffffff;
+    border: 1px solid #dadce0;
+    border-radius: 10px;
+    line-height: 1.7;
+    white-space: normal;
+    padding: 0;
+    overflow: hidden;
+}
+
+.aiops-panel {
+    width: 100%;
+    color: #202124;
+}
+
+.aiops-current-status {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 16px;
+    background: #f8fafd;
+    border-bottom: 1px solid #e8eaed;
+}
+
+.aiops-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #1a73e8;
+    box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+}
+
+.aiops-current-status.running .aiops-status-dot {
+    animation: aiopsPulse 1.4s ease-in-out infinite;
+}
+
+.aiops-current-status.complete .aiops-status-dot {
+    background: #188038;
+    box-shadow: 0 0 0 4px rgba(24, 128, 56, 0.12);
+}
+
+.aiops-current-status.error .aiops-status-dot {
+    background: #d93025;
+    box-shadow: 0 0 0 4px rgba(217, 48, 37, 0.12);
+}
+
+.aiops-status-label {
+    color: #5f6368;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    margin-bottom: 2px;
+}
+
+.aiops-status-text {
+    color: #202124;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.aiops-panel-section {
+    padding: 16px;
+    border-bottom: 1px solid #edf0f2;
+}
+
+.aiops-panel-section:last-child {
+    border-bottom: 0;
+}
+
+.aiops-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #174ea6;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.aiops-streaming-label {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e8f0fe;
+    color: #174ea6;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.aiops-plan-list {
+    list-style: none;
+    counter-reset: aiops-plan;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.aiops-plan-item {
+    counter-increment: aiops-plan;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: start;
+    min-height: 34px;
+    padding: 7px 8px;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.aiops-plan-index::before {
+    content: counter(aiops-plan);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #e8eaed;
+    color: #5f6368;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.aiops-plan-item.done .aiops-plan-index::before {
+    content: "✓";
+    background: #e6f4ea;
+    color: #188038;
+}
+
+.aiops-plan-item.active {
+    background: #e8f0fe;
+    animation: aiopsActiveStep 1.6s ease-in-out infinite;
+}
+
+.aiops-plan-item.active .aiops-plan-index::before {
+    background: #1a73e8;
+    color: #ffffff;
+}
+
+.aiops-plan-text {
+    min-width: 0;
+    color: #202124;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.aiops-plan-state {
+    align-self: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #5f6368;
+    border: 1px solid #e8eaed;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.aiops-plan-item.done .aiops-plan-state {
+    color: #188038;
+    border-color: #ceead6;
+}
+
+.aiops-plan-item.active .aiops-plan-state {
+    color: #174ea6;
+    border-color: #d2e3fc;
+}
+
+.aiops-record-list {
+    display: grid;
+    gap: 8px;
+}
+
+.aiops-record {
+    border: 1px solid #e8eaed;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.aiops-record summary {
+    display: grid;
+    grid-template-columns: minmax(160px, 0.55fr) minmax(0, 1fr);
+    gap: 12px;
+    cursor: pointer;
+    padding: 10px 12px;
+    list-style: none;
+}
+
+.aiops-record summary::-webkit-details-marker {
+    display: none;
+}
+
+.aiops-record summary span {
+    color: #202124;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.aiops-record summary small {
+    color: #5f6368;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.aiops-record-detail {
+    padding: 0 12px 12px;
+    color: #3c4043;
+    border-top: 1px solid #f1f3f4;
+}
+
+.aiops-report-section {
+    background: #ffffff;
+}
+
+.aiops-report-body h1,
+.aiops-report-body h2,
+.aiops-report-body h3 {
+    color: #202124;
+}
+
+.aiops-report-body h2:first-child,
+.aiops-report-body h3:first-child {
+    margin-top: 0;
+}
+
+.aiops-error {
+    margin: 12px 16px 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #fce8e6;
+    color: #a50e0e;
+    border: 1px solid #fad2cf;
+    font-weight: 500;
+}
+
+.aiops-message .message-content ol,
+.aiops-message .message-content ul {
+    margin-bottom: 14px;
+}
+
+.aiops-message .message-content li {
+    margin-bottom: 6px;
+}
+
+.aiops-message .message-content .aiops-plan-list,
+.aiops-message .message-content .aiops-plan-item {
+    margin-bottom: 0;
+}
+
+.aiops-message .message-content .aiops-plan-list {
+    padding-left: 0;
+}
+
+.aiops-message .message-content .aiops-record-detail p:last-child,
+.aiops-message .message-content .aiops-report-body p:last-child {
+    margin-bottom: 0;
+}
+
+@keyframes aiopsPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 7px rgba(26, 115, 232, 0.05);
+        transform: scale(1.08);
+    }
+}
+
+@keyframes aiopsActiveStep {
+    0%, 100% {
+        background: #e8f0fe;
+    }
+    50% {
+        background: #f4f8ff;
+    }
 }
 
 /* 详情折叠区域 */

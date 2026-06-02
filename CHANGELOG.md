@@ -84,6 +84,26 @@
   - 前端按钮改为请求 `POST /api/aiops/query`，并提交 `input` 字段作为智能运维分析任务。
   - AIOps SSE 接口将 Graph 节点输出转换为前端可渲染的计划、步骤完成和报告事件。
   - 为 `static/app.js` 引入版本查询串，避免 Chrome 继续复用旧脚本导致按钮请求旧路径。
+- fix(aiops): 增强 AI Ops SSE 阶段流式反馈（2026-06-02）
+  - AIOps LangGraph 节点通过 custom stream 输出规划、执行和复核阶段状态。
+  - 服务端同时消费 `custom` 与 `updates` 流事件，并为 SSE 响应添加禁止缓冲的响应头。
+  - 前端改为按 SSE 事件块解析 AIOps 响应，避免依赖字段形状固定的 JSON 正则。
+- fix(aiops): 优化 AI Ops 流式内容排版（2026-06-02）
+  - 流式更新阶段同步渲染 Markdown，避免内容完成前只显示拥挤纯文本。
+  - 将计划、状态、步骤结果和诊断报告拼接为可扫读的 Markdown 分区。
+  - 增加 AIOps 消息标题、状态块和步骤块样式，提升长报告流式阅读体验。
+- fix(aiops): 避免 AIOps SSE 中断只显示 network error（2026-06-02）
+  - 前端 API 地址改为跟随当前页面 origin，避免 `localhost` 与 `127.0.0.1` 不一致造成请求失败。
+  - 后端 SSE 生成器捕获运行时异常并返回 `error` 事件，避免连接被异常关闭。
+  - 前端读流中断时保留已渲染内容，并将中断原因追加为错误提示块。
+  - Planner 和 Replanner 结构化输出为空时使用保底计划或兜底报告，避免 `NoneType` 导致流中断。
+  - 知识库检索失败时返回降级提示，避免 Milvus collection 未加载等向量库异常打断 AIOps 流。
+- refactor(aiops): 将 AIOps SSE 输出统一转换为业务事件协议（2026-06-03）
+  - Service 层统一将 LangGraph `custom` 与 `updates` 流转换为 `status`、`plan`、`step_complete`、`plan_update`、`report` 和 `complete` 事件。
+  - `past_steps` 改用 LangGraph reducer 增量追加，executor 仅返回当前步骤结果，避免历史步骤重复输出。
+  - 前端兼容新事件字段渲染计划、步骤结果和后续计划更新，并补充事件转换单测。
+  - AIOps 前端改为结构化状态面板，状态和计划更新复用固定区域，避免过程日志挤占诊断报告。
+  - 诊断报告支持前端分块揭示，并为运行状态和当前步骤增加轻量动效，保留流式推进感。
 
 ## 健康检查接口
 

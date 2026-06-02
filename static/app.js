@@ -1,7 +1,7 @@
 // SuperBizAgent 前端应用
 class SuperBizAgentApp {
     constructor() {
-        this.apiBaseUrl = 'http://localhost:9000/api';
+        this.apiBaseUrl = this.resolveApiBaseUrl();
         this.currentMode = 'stream'; // 'quick' 或 'stream'
         this.sessionId = this.generateSessionId();
         this.isStreaming = false;
@@ -15,6 +15,14 @@ class SuperBizAgentApp {
         this.initMarkdown();
         this.checkAndSetCentered();
         this.renderChatHistory();
+    }
+
+    resolveApiBaseUrl() {
+        if (window.location.origin && window.location.origin !== 'null') {
+            return `${window.location.origin}/api`;
+        }
+
+        return 'http://127.0.0.1:9000/api';
     }
 
     // 初始化Markdown配置
@@ -1172,206 +1180,414 @@ class SuperBizAgentApp {
 
     // 发送智能运维请求（SSE 流式模式）
     async sendAIOpsRequest(loadingMessageElement, aiopsInput) {
-        try {
-            const response = await fetch(`${this.apiBaseUrl}/aiops/query`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    input: aiopsInput,
-                    session_id: this.sessionId
-                })
-            });
+        const response = await fetch(`${this.apiBaseUrl}/aiops/query`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                input: aiopsInput,
+                session_id: this.sessionId
+            })
+        });
 
-            if (!response.ok) {
-                throw new Error(`HTTP错误: ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`HTTP错误: ${response.status}`);
+        }
+
+        let streamCompleted = false;
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let reportAnimationTimer = null;
+        const aiopsState = {
+            status: '正在连接智能运维服务...',
+            planSteps: [],
+            completedSteps: [],
+            currentStep: '',
+            report: '',
+            displayReport: '',
+            isReportStreaming: false,
+            error: '',
+            isComplete: false
+        };
+
+        const parseLegacyStepMessage = (message) => {
+            const parts = (message || '').split(/\n{2,}/);
+            const step = parts.shift() || '计划步骤';
+            return {
+                step,
+                result: parts.join('\n\n').trim()
+            };
+        };
+
+        const removeCompletedPlanStep = (step) => {
+            const index = aiopsState.planSteps.findIndex((planStep) => planStep === step);
+            if (index >= 0) {
+                aiopsState.planSteps.splice(index, 1);
+            } else if (aiopsState.planSteps.length > 0) {
+                aiopsState.planSteps.shift();
+            }
+        };
+
+        const updateRunningStep = (message) => {
+            const match = (message || '').match(/^正在执行计划步骤：(.+)$/);
+            if (match) {
+                aiopsState.currentStep = match[1];
+            }
+        };
+
+        const renderPanel = () => {
+            if (loadingMessageElement) {
+                this.updateAIOpsPanelContent(loadingMessageElement, aiopsState);
+            }
+        };
+
+        const revealReport = (report) => {
+            if (reportAnimationTimer) {
+                clearInterval(reportAnimationTimer);
             }
 
-            let fullResponse = '';
+            aiopsState.report = report || '';
+            aiopsState.displayReport = '';
+            aiopsState.isReportStreaming = Boolean(aiopsState.report);
+            aiopsState.status = aiopsState.report ? '正在生成诊断报告...' : aiopsState.status;
 
-            // 处理 SSE 流式响应
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-            let currentEvent = 'message'; // 默认事件类型为 message
+            if (!aiopsState.report) {
+                renderPanel();
+                return;
+            }
+
+            let cursor = 0;
+            const chunkSize = Math.max(4, Math.ceil(aiopsState.report.length / 120));
+            reportAnimationTimer = setInterval(() => {
+                cursor = Math.min(aiopsState.report.length, cursor + chunkSize);
+                aiopsState.displayReport = aiopsState.report.slice(0, cursor);
+
+                if (cursor >= aiopsState.report.length) {
+                    clearInterval(reportAnimationTimer);
+                    reportAnimationTimer = null;
+                    aiopsState.isReportStreaming = false;
+                    aiopsState.status = aiopsState.isComplete ? '诊断流程完成' : '诊断报告已生成';
+                }
+
+                renderPanel();
+            }, 35);
+
+            renderPanel();
+        };
+
+        const appendMessage = (sseMessage) => {
+            if (!sseMessage || !sseMessage.type) {
+                return false;
+            }
+
+            if (sseMessage.type === 'content') {
+                aiopsState.report += sseMessage.data || '';
+                aiopsState.displayReport = aiopsState.report;
+                aiopsState.isReportStreaming = true;
+                aiopsState.status = '正在生成诊断报告...';
+            } else if (sseMessage.type === 'plan') {
+                aiopsState.planSteps = Array.isArray(sseMessage.steps) ? [...sseMessage.steps] : [];
+                aiopsState.status = sseMessage.message || '执行计划已制定';
+            } else if (sseMessage.type === 'step_complete') {
+                const legacyStep = parseLegacyStepMessage(sseMessage.message);
+                const step = sseMessage.current_step || legacyStep.step;
+                const result = sseMessage.result || legacyStep.result;
+
+                aiopsState.completedSteps.push({ step, result });
+                removeCompletedPlanStep(step);
+                aiopsState.currentStep = '';
+                aiopsState.status = `已完成：${this.formatAIOpsStepTitle(step)}`;
+            } else if (sseMessage.type === 'plan_update') {
+                aiopsState.planSteps = Array.isArray(sseMessage.steps) ? [...sseMessage.steps] : aiopsState.planSteps;
+                aiopsState.status = sseMessage.message || '后续计划已更新';
+            } else if (sseMessage.type === 'status') {
+                aiopsState.status = sseMessage.message || aiopsState.status;
+                updateRunningStep(aiopsState.status);
+            } else if (sseMessage.type === 'report') {
+                const remainingReportStep = aiopsState.planSteps.find((step) => (
+                    step.includes('报告') || step.includes('整理')
+                ));
+                if (remainingReportStep) {
+                    aiopsState.completedSteps.push({ step: remainingReportStep, result: '诊断报告已生成' });
+                    removeCompletedPlanStep(remainingReportStep);
+                }
+                revealReport(sseMessage.report || '');
+            } else if (sseMessage.type === 'complete' || sseMessage.type === 'done') {
+                if (sseMessage.response) {
+                    revealReport(sseMessage.response);
+                }
+                aiopsState.isComplete = true;
+                if (!aiopsState.isReportStreaming) {
+                    aiopsState.status = sseMessage.message || '诊断流程完成';
+                }
+                streamCompleted = true;
+            } else if (sseMessage.type === 'error') {
+                aiopsState.error = sseMessage.data || sseMessage.message || '智能运维分析失败';
+                aiopsState.status = '智能运维分析失败';
+                aiopsState.isReportStreaming = false;
+                if (reportAnimationTimer) {
+                    clearInterval(reportAnimationTimer);
+                    reportAnimationTimer = null;
+                }
+                streamCompleted = true;
+            }
+
+            renderPanel();
+            return streamCompleted;
+        };
+
+        const processEventBlock = (block) => {
+            const dataLines = [];
+
+            for (const line of block.split(/\r?\n/)) {
+                if (line.startsWith('data:')) {
+                    dataLines.push(line.substring(5).trimStart());
+                }
+            }
+
+            if (dataLines.length === 0) {
+                return false;
+            }
+
+            const rawData = dataLines.join('\n').trim();
+            if (!rawData) {
+                return false;
+            }
 
             try {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    
-                    if (done) {
-                        // 流结束，更新最终内容
-                        if (fullResponse) {
-                            console.log('AI Ops 流结束，更新最终内容，长度:', fullResponse.length);
-                            this.updateAIOpsMessage(loadingMessageElement, fullResponse, []);
-                        }
+                return appendMessage(JSON.parse(rawData));
+            } catch (error) {
+                if (error.message.includes('智能运维')) {
+                    throw error;
+                }
+
+                aiopsState.report += rawData;
+                aiopsState.displayReport = aiopsState.report;
+                aiopsState.isReportStreaming = true;
+                renderPanel();
+                return false;
+            }
+        };
+
+        try {
+            while (true) {
+                let readResult;
+                try {
+                    readResult = await reader.read();
+                } catch (error) {
+                    if (this.hasAIOpsPanelContent(aiopsState)) {
+                        aiopsState.error = `连接中断，请刷新后重试。${error.message ? `(${error.message})` : ''}`;
+                        aiopsState.status = '连接中断';
+                        aiopsState.isReportStreaming = false;
+                        renderPanel();
                         break;
                     }
 
-                    // 解码数据并添加到缓冲区
-                    buffer += decoder.decode(value, { stream: true });
-                    
-                    // 按行分割处理
-                    const lines = buffer.split('\n');
-                    // 保留最后一行（可能不完整）
-                    buffer = lines.pop() || '';
-                    
-                    for (const line of lines) {
-                        if (line.trim() === '') continue;
-                        
-                        console.log('[AI Ops SSE] 收到行:', line);
-                        
-                        // 解析 SSE 格式
-                        if (line.startsWith('id:')) {
-                            continue;
-                        } else if (line.startsWith('event:')) {
-                            currentEvent = line.substring(6).trim();
-                            console.log('[AI Ops SSE] 事件类型:', currentEvent);
-                            continue;
-                        } else if (line.startsWith('data:')) {
-                            const rawData = line.substring(5).trim();
-                            console.log('[AI Ops SSE] 数据:', rawData, ', currentEvent:', currentEvent);
-                            
-                            // 解析可能包含多个JSON对象的数据
-                            const processJsonMessages = (data) => {
-                                const jsonPattern = /\{"type"\s*:\s*"[^"]+"\s*,\s*"data"\s*:\s*(?:"[^"]*"|null)\}/g;
-                                const matches = data.match(jsonPattern);
-                                
-                                if (matches && matches.length > 0) {
-                                    console.log('[AI Ops SSE] 匹配到', matches.length, '个JSON对象');
-                                    for (const jsonStr of matches) {
-                                        try {
-                                            const sseMessage = JSON.parse(jsonStr);
-                                            if (sseMessage.type === 'content') {
-                                                fullResponse += sseMessage.data || '';
-                                            } else if (sseMessage.type === 'plan') {
-                                                // 处理计划创建事件
-                                                const planText = `\n\n## 📋 执行计划\n${sseMessage.message}\n\n`;
-                                                fullResponse += planText;
-                                            } else if (sseMessage.type === 'step_complete') {
-                                                // 处理步骤完成事件
-                                                const stepText = `\n✅ ${sseMessage.message}\n`;
-                                                fullResponse += stepText;
-                                            } else if (sseMessage.type === 'status') {
-                                                // 处理状态更新事件
-                                                const statusText = `\n⏳ ${sseMessage.message}\n`;
-                                                fullResponse += statusText;
-                                            } else if (sseMessage.type === 'report') {
-                                                // 处理最终报告事件 - 流式输出
-                                                console.log('AI Ops 最终报告生成');
-                                                const reportText = `\n\n## 🎯 诊断报告\n\n${sseMessage.report || ''}\n`;
-                                                fullResponse += reportText;
-                                            } else if (sseMessage.type === 'complete') {
-                                                // 处理完成事件
-                                                console.log('AI Ops 诊断完成');
-                                                if (sseMessage.response) {
-                                                    fullResponse += `\n\n${sseMessage.response}`;
-                                                }
-                                                this.updateAIOpsMessage(loadingMessageElement, fullResponse, []);
-                                                return true;
-                                            } else if (sseMessage.type === 'done') {
-                                                console.log('AI Ops 流完成，最终内容长度:', fullResponse.length);
-                                                this.updateAIOpsMessage(loadingMessageElement, fullResponse, []);
-                                                return true;
-                                            } else if (sseMessage.type === 'error') {
-                                                throw new Error(sseMessage.data || sseMessage.message || '智能运维分析失败');
-                                            }
-                                        } catch (e) {
-                                            if (e.message.includes('智能运维')) throw e;
-                                            console.log('[AI Ops SSE] 单个JSON解析失败:', jsonStr);
-                                        }
-                                    }
-                                    if (loadingMessageElement) {
-                                        this.updateAIOpsStreamContent(loadingMessageElement, fullResponse);
-                                    }
-                                    return false;
-                                }
-                                return null;
-                            };
-                            
-                            const result = processJsonMessages(rawData);
-                            if (result === true) {
-                                return; // 流结束
-                            } else if (result === null) {
-                                // 没有匹配到多个JSON，尝试单个JSON解析
-                                try {
-                                    const sseMessage = JSON.parse(rawData);
-                                    if (sseMessage && sseMessage.type) {
-                                        if (sseMessage.type === 'content') {
-                                            fullResponse += sseMessage.data || '';
-                                            if (loadingMessageElement) {
-                                                this.updateAIOpsStreamContent(loadingMessageElement, fullResponse);
-                                            }
-                                        } else if (sseMessage.type === 'plan') {
-                                            // 处理计划创建事件
-                                            const planText = `\n\n## 📋 执行计划\n${sseMessage.message}\n\n`;
-                                            fullResponse += planText;
-                                            if (loadingMessageElement) {
-                                                this.updateAIOpsStreamContent(loadingMessageElement, fullResponse);
-                                            }
-                                        } else if (sseMessage.type === 'step_complete') {
-                                            // 处理步骤完成事件
-                                            const stepText = `\n✅ ${sseMessage.message}\n`;
-                                            fullResponse += stepText;
-                                            if (loadingMessageElement) {
-                                                this.updateAIOpsStreamContent(loadingMessageElement, fullResponse);
-                                            }
-                                        } else if (sseMessage.type === 'status') {
-                                            // 处理状态更新事件
-                                            const statusText = `\n⏳ ${sseMessage.message}\n`;
-                                            fullResponse += statusText;
-                                            if (loadingMessageElement) {
-                                                this.updateAIOpsStreamContent(loadingMessageElement, fullResponse);
-                                            }
-                                        } else if (sseMessage.type === 'report') {
-                                            // 处理最终报告事件 - 这是关键！
-                                            console.log('AI Ops 最终报告生成，流式输出中...');
-                                            const reportText = `\n\n## 🎯 诊断报告\n\n${sseMessage.report || ''}\n`;
-                                            fullResponse += reportText;
-                                            if (loadingMessageElement) {
-                                                this.updateAIOpsStreamContent(loadingMessageElement, fullResponse);
-                                            }
-                                        } else if (sseMessage.type === 'complete') {
-                                            // 处理完成事件
-                                            console.log('AI Ops 诊断完成，最终内容长度:', fullResponse.length);
-                                            if (sseMessage.response) {
-                                                fullResponse += `\n\n${sseMessage.response}`;
-                                            }
-                                            // 使用最终的完整内容更新消息
-                                            this.updateAIOpsMessage(loadingMessageElement, fullResponse, []);
-                                            return;
-                                        } else if (sseMessage.type === 'done') {
-                                            console.log('AI Ops 流完成，最终内容长度:', fullResponse.length);
-                                            this.updateAIOpsMessage(loadingMessageElement, fullResponse, []);
-                                            return;
-                                        } else if (sseMessage.type === 'error') {
-                                            throw new Error(sseMessage.data || sseMessage.message || '智能运维分析失败');
-                                        }
-                                    } else {
-                                        fullResponse += rawData;
-                                        if (loadingMessageElement) {
-                                            this.updateAIOpsStreamContent(loadingMessageElement, fullResponse);
-                                        }
-                                    }
-                                } catch (e) {
-                                    if (e.message.includes('智能运维')) throw e;
-                                    // 非 JSON 格式，直接追加原始数据
-                                    fullResponse += rawData;
-                                    if (loadingMessageElement) {
-                                        this.updateAIOpsStreamContent(loadingMessageElement, fullResponse);
-                                    }
-                                }
-                            }
-                        }
+                    throw error;
+                }
+
+                const { done, value } = readResult;
+
+                if (done) {
+                    buffer += decoder.decode();
+                    if (buffer.trim()) {
+                        processEventBlock(buffer);
+                    }
+                    break;
+                }
+
+                buffer += decoder.decode(value, { stream: true });
+                const eventBlocks = buffer.split(/\r?\n\r?\n/);
+                buffer = eventBlocks.pop() || '';
+
+                for (const block of eventBlocks) {
+                    if (processEventBlock(block)) {
+                        break;
                     }
                 }
-            } finally {
-                reader.releaseLock();
+
+                if (streamCompleted) {
+                    break;
+                }
             }
-        } catch (error) {
-            throw error;
+        } finally {
+            reader.releaseLock();
         }
+
+        if (this.hasAIOpsPanelContent(aiopsState)) {
+            renderPanel();
+            this.currentChatHistory.push({
+                type: 'assistant',
+                content: this.buildAIOpsHistoryText(aiopsState),
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
+
+    hasAIOpsPanelContent(state) {
+        return Boolean(
+            state.status ||
+            state.planSteps.length ||
+            state.completedSteps.length ||
+            state.report ||
+            state.displayReport ||
+            state.error
+        );
+    }
+
+    buildAIOpsHistoryText(state) {
+        const parts = [];
+        if (state.status) {
+            parts.push(`当前状态：${state.status}`);
+        }
+        if (state.completedSteps.length > 0) {
+            const steps = state.completedSteps
+                .map((item, index) => `${index + 1}. ${item.step}\n${item.result || '已完成'}`)
+                .join('\n\n');
+            parts.push(`执行记录：\n${steps}`);
+        }
+        if (state.report) {
+            parts.push(`诊断报告：\n${state.report}`);
+        }
+        if (state.error) {
+            parts.push(`错误：${state.error}`);
+        }
+        return parts.join('\n\n');
+    }
+
+    formatAIOpsStepTitle(step) {
+        const text = (step || '计划步骤').trim();
+        const toolMatch = text.match(/^使用([A-Za-z0-9_]+)工具获取(.+?)(?:，|,|。|$)/);
+        if (toolMatch) {
+            return `查询${toolMatch[2].replace(/^当前服务的?/, '')}`;
+        }
+        const retrieveMatch = text.match(/^针对每一种类型的告警，使用retrieve_knowledge工具/);
+        if (retrieveMatch) {
+            return '检索告警处理经验';
+        }
+        if (text.includes('整理') && text.includes('报告')) {
+            return '生成诊断报告';
+        }
+        return text.length > 42 ? `${text.slice(0, 42)}...` : text;
+    }
+
+    summarizeAIOpsResult(result) {
+        const text = (result || '已完成').replace(/\s+/g, ' ').trim();
+        return text.length > 150 ? `${text.slice(0, 150)}...` : text;
+    }
+
+    renderAIOpsPanelHtml(state) {
+        const statusClass = state.error ? 'error' : state.isReportStreaming ? 'running' : state.isComplete ? 'complete' : 'running';
+        const planItems = [
+            ...state.completedSteps.map((item) => ({ step: item.step, status: 'done' })),
+            ...state.planSteps.map((step) => ({
+                step,
+                status: state.currentStep && step === state.currentStep ? 'active' : 'pending'
+            }))
+        ];
+
+        const planHtml = planItems.length > 0
+            ? `
+                <section class="aiops-panel-section">
+                    <div class="aiops-section-title">执行计划</div>
+                    <ol class="aiops-plan-list">
+                        ${planItems.map((item) => `
+                            <li class="aiops-plan-item ${item.status}">
+                                <span class="aiops-plan-index"></span>
+                                <span class="aiops-plan-text">${this.escapeHtml(this.formatAIOpsStepTitle(item.step))}</span>
+                                <span class="aiops-plan-state">${this.getAIOpsPlanStateLabel(item.status)}</span>
+                            </li>
+                        `).join('')}
+                    </ol>
+                </section>
+            `
+            : '';
+
+        const recordsHtml = state.completedSteps.length > 0
+            ? `
+                <section class="aiops-panel-section">
+                    <div class="aiops-section-title">执行记录</div>
+                    <div class="aiops-record-list">
+                        ${state.completedSteps.map((item) => `
+                            <details class="aiops-record">
+                                <summary>
+                                    <span>${this.escapeHtml(this.formatAIOpsStepTitle(item.step))}</span>
+                                    <small>${this.escapeHtml(this.summarizeAIOpsResult(item.result))}</small>
+                                </summary>
+                                <div class="aiops-record-detail">${this.renderMarkdown(item.result || '已完成')}</div>
+                            </details>
+                        `).join('')}
+                    </div>
+                </section>
+            `
+            : '';
+
+        const reportText = state.displayReport || state.report;
+        const reportHtml = reportText
+            ? `
+                <section class="aiops-panel-section aiops-report-section">
+                    <div class="aiops-section-title">
+                        <span>诊断报告</span>
+                        ${state.isReportStreaming ? '<span class="aiops-streaming-label">生成中</span>' : ''}
+                    </div>
+                    <div class="aiops-report-body">${this.renderMarkdown(reportText)}</div>
+                </section>
+            `
+            : '';
+
+        const errorHtml = state.error
+            ? `<div class="aiops-error">${this.escapeHtml(state.error)}</div>`
+            : '';
+
+        return `
+            <div class="aiops-panel">
+                <div class="aiops-current-status ${statusClass}">
+                    <span class="aiops-status-dot"></span>
+                    <div>
+                        <div class="aiops-status-label">当前状态</div>
+                        <div class="aiops-status-text">${this.escapeHtml(state.status || '等待中')}</div>
+                    </div>
+                </div>
+                ${errorHtml}
+                ${planHtml}
+                ${recordsHtml}
+                ${reportHtml}
+            </div>
+        `;
+    }
+
+    getAIOpsPlanStateLabel(status) {
+        if (status === 'done') return '已完成';
+        if (status === 'active') return '进行中';
+        return '待执行';
+    }
+
+    updateAIOpsPanelContent(messageElement, state) {
+        if (!messageElement) return;
+
+        messageElement.classList.add('aiops-message');
+
+        const messageContentWrapper = messageElement.querySelector('.message-content-wrapper');
+        if (!messageContentWrapper) return;
+
+        let messageContent = messageContentWrapper.querySelector('.message-content');
+        if (!messageContent) {
+            messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContentWrapper.appendChild(messageContent);
+        }
+
+        messageContent.classList.remove('loading-message-content');
+        const loadingIcon = messageContent.querySelector('.loading-spinner-icon');
+        if (loadingIcon) {
+            loadingIcon.remove();
+        }
+
+        messageContent.innerHTML = this.renderAIOpsPanelHtml(state);
+        this.highlightCodeBlocks(messageContent);
+        this.scrollToBottom();
     }
 
     // 更新智能运维流式内容（实时显示）
@@ -1389,8 +1605,15 @@ class SuperBizAgentApp {
                 messageContent.className = 'message-content';
                 messageContentWrapper.appendChild(messageContent);
             }
-            // 流式显示时使用纯文本
-            messageContent.textContent = content;
+            messageContent.classList.remove('loading-message-content');
+
+            const loadingIcon = messageContent.querySelector('.loading-spinner-icon');
+            if (loadingIcon) {
+                loadingIcon.remove();
+            }
+
+            messageContent.innerHTML = this.renderMarkdown(content);
+            this.highlightCodeBlocks(messageContent);
             this.scrollToBottom();
         }
     }
