@@ -2,7 +2,7 @@
 class SuperBizAgentApp {
     constructor() {
         this.apiBaseUrl = 'http://localhost:9000/api';
-        this.currentMode = 'quick'; // 'quick' 或 'stream'
+        this.currentMode = 'stream'; // 'quick' 或 'stream'
         this.sessionId = this.generateSessionId();
         this.isStreaming = false;
         this.currentChatHistory = []; // 当前对话的消息历史
@@ -594,7 +594,7 @@ class SuperBizAgentApp {
                 'quick': '快速',
                 'stream': '流式'
             };
-            this.currentModeText.textContent = modeNames[this.currentMode] || '快速';
+            this.currentModeText.textContent = modeNames[this.currentMode] || '流式';
         }
         
         // 更新下拉菜单选中状态
