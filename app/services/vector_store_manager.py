@@ -1,3 +1,4 @@
+import json
 from uuid import uuid4
 
 from langchain_core.documents import Document
@@ -66,8 +67,26 @@ class VectorStoreManager:
 
         return self.vector_store
 
-    def add_documents(self, docs: list[Document]) -> list[str]:
-        ids = [uuid4().hex for _ in docs]
+    def get_existing_ids(self, ids: list[str]) -> set[str]:
+        if not ids:
+            return set()
+
+        self.initialize()
+        collection = milvus_manager.get_collection()
+        expr = f"id in {json.dumps(ids)}"
+        rows = collection.query(expr=expr, output_fields=["id"])
+
+        return {str(row["id"]) for row in rows}
+
+    def add_documents(self, docs: list[Document], ids: list[str] | None = None) -> list[str]:
+        if not docs:
+            return []
+
+        if ids is None:
+            ids = [uuid4().hex for _ in docs]
+
+        if len(ids) != len(docs):
+            raise ValueError("The number of ids must match the number of documents.")
 
         return self._get_vector_store().add_documents(docs, ids=ids)
 

@@ -29,6 +29,10 @@
 - fix(static): 对齐前端请求与 FastAPI 接口契约（2026-06-01）
   - 聊天接口改为提交 `question` 与 `session_id`，避免因字段名不匹配返回 422。
   - 流式聊天路径改为 `/api/chat/stream`，文件上传路径改为 `/api/files/upload`，并按当前后端响应结构判断成功。
+- fix(static): 根据入库统计展示文件上传结果（2026-06-02）
+  - 前端读取 `inserted_count` 与 `skipped_count`，区分首次入库、部分重复和全部重复上传。
+  - 全部重复时提示“内容已存在，未重复入库”，避免固定成功文案误导用户。
+  - 首页和静态资源统一返回 no-cache 响应头，避免后续前端更新依赖手动版本查询串。
 
 ## RAG Agent 服务
 
@@ -90,6 +94,9 @@
   - 上传内容经文档切分服务处理后写入向量库，并返回统一上传响应。
   - 在 FastAPI 入口以 `/api` 前缀和“文件管理”标签注册文件路由。
   - 增加 `aiofiles` 与 `python-multipart` 依赖以支持异步文件写入和 multipart 表单解析。
+- fix(api): 加强文件上传入库校验并返回去重统计（2026-06-02）
+  - 后端限制上传扩展名、文件大小、UTF-8 编码和空内容，避免无效文件进入切分和向量写入流程。
+  - 上传响应新增实际入库数与重复跳过数，便于区分切分数量和新增向量数量。
 
 ## 向量数据库
 
@@ -113,6 +120,9 @@
 - feat(rag): 添加向量写入与查询服务（2026-05-31）
   - 新增 `VectorIndexService`，接收切分后的文档块并返回向量库插入数量。
   - 新增 `VectorSearchService`，按 `rag_top_k` 配置执行相似度查询并返回文档列表。
+- fix(vector-store): 使用 chunk hash 全库去重后再写入向量库（2026-06-02）
+  - 为每个 chunk 补充 `chunk_index` 与 `content_hash` 元数据，并以 `content_hash` 作为新写入主键。
+  - 写入前跳过同批重复 chunk 和 Milvus 中已存在的主键，避免重复上传产生重复向量。
 - feat(tools): 添加知识库检索工具函数（2026-06-01）
   - 新增 `retrieve_knowledge` LangChain tool，将向量检索结果按换行拼接为字符串。
   - 在 `app.tools` 包入口导出 `DEFAULT_LOCAL_AGENT_TOOLS`，集中维护 Agent 默认本地工具列表。

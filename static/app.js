@@ -1127,7 +1127,21 @@ class SuperBizAgentApp {
 
             if (data.status === 'success') {
                 // 在聊天界面显示上传成功消息
-                const successMessage = `${file.name} 上传到知识库成功`;
+                const insertedCount = data.inserted_count;
+                const skippedCount = data.skipped_count;
+                const hasIndexStats = Number.isInteger(insertedCount) && Number.isInteger(skippedCount);
+                let successMessage = `${file.name} 上传到知识库成功`;
+
+                if (hasIndexStats) {
+                    if (insertedCount > 0 && skippedCount === 0) {
+                        successMessage = `${file.name} 上传到知识库成功，新增 ${insertedCount} 条内容`;
+                    } else if (insertedCount > 0 && skippedCount > 0) {
+                        successMessage = `${file.name} 上传完成，新增 ${insertedCount} 条内容，跳过 ${skippedCount} 条重复内容`;
+                    } else if (insertedCount === 0 && skippedCount > 0) {
+                        successMessage = `${file.name} 内容已存在，未重复入库`;
+                    }
+                }
+
                 this.addMessage('assistant', successMessage, false, true);
             } else {
                 throw new Error(data.message || '上传失败');

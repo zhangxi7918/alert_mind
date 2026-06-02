@@ -8,5 +8,7 @@ class UploadResponse(BaseModel):
 
     filename: str = Field(description="上传的文件名")
     chunks_count: int = Field(description="切分出的 chunk 数量")
+    inserted_count: int = Field(default=0, description="实际新增入库的 chunk 数量")
+    skipped_count: int = Field(default=0, description="因重复而跳过的 chunk 数量")
     status: Literal["success", "error"] = Field(description="上传处理状态")
     message: str | None = Field(default=None, description="可选的描述信息")
