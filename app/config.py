@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     alert_mind_debug: bool = False
 
     # DashScope 配置
-    dashscope_api_key: str = "sk-a292c383da6149ed844d82f1af284e50"
+    dashscope_api_key: str = ""
     dashscope_embedding_model: str = "text-embedding-v4"
     
     # Milvus 配置
@@ -37,3 +37,12 @@ class Settings(BaseSettings):
     rag_model: str = "qwen-max"
 
 config = Settings()
+
+
+def get_dashscope_api_key(settings: Settings | None = None) -> str:
+    current_config = settings or config
+    api_key = current_config.dashscope_api_key.strip()
+    if not api_key:
+        raise RuntimeError("DASHSCOPE_API_KEY 未配置，请在 .env 或环境变量中设置后再启动服务。")
+
+    return api_key

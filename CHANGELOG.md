@@ -8,6 +8,9 @@
   - 新增 `app/config.py`，通过 `pydantic_settings.BaseSettings` 定义基础配置项和默认值。
   - 配置 `model_config` 读取 UTF-8 编码的 `.env` 文件、关闭环境变量大小写敏感，并忽略多余配置项。
   - 增加 `app_version` 配置项，为健康检查等接口提供统一版本来源。
+- fix(config): 移除硬编码 DashScope API Key（2026-06-02）
+  - `DASHSCOPE_API_KEY` 改为仅从 `.env` 或环境变量读取，缺失时通过统一 helper 抛出明确错误。
+  - 新增 `.env.example`，提供本地配置模板且不包含真实密钥。
 
 ## 服务入口
 

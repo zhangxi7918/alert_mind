@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from app.agent.mcp_client import get_mcp_client_with_retry, load_mcp_tools_safe
 from app.agent.aiops.state import PlanExecuteState
 from app.agent.aiops.utils import format_tools_description
-from app.config import config
+from app.config import config, get_dashscope_api_key
 from app.tools import DEFAULT_LOCAL_AGENT_TOOLS
 from app.tools.knowledge_tool import retrieve_knowledge
 
@@ -72,7 +72,7 @@ async def planner(state: PlanExecuteState) -> dict[str, List[str]]:
 
     llm = ChatQwen(
         model=config.rag_model,
-        api_key=config.dashscope_api_key or "missing-dashscope-api-key",
+        api_key=get_dashscope_api_key(),
         base_url=DASHSCOPE_COMPATIBLE_BASE_URL,
         streaming=False,
     )
