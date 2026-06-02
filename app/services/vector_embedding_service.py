@@ -2,7 +2,7 @@ from openai import OpenAI
 from openai import OpenAIError
 from langchain_core.embeddings import Embeddings
 
-from app.config import config
+from app.config import config, get_dashscope_api_key
 
 DASHSCOPE_COMPATIBLE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 DEFAULT_EMBEDDING_DIMENSIONS = 1024
@@ -11,7 +11,7 @@ DEFAULT_EMBEDDING_DIMENSIONS = 1024
 class DashScopeEmbeddings(Embeddings):
     def __init__(
         self,
-        api_key: str,
+        api_key: str | None,
         model: str,
         dimensions: int = DEFAULT_EMBEDDING_DIMENSIONS,
     ) -> None:
@@ -42,12 +42,11 @@ class DashScopeEmbeddings(Embeddings):
         if self.client is not None:
             return self.client
 
-        if not self.api_key:
-            raise RuntimeError("DashScope API key is missing. Set DASHSCOPE_API_KEY in .env or environment.")
+        api_key = self.api_key or get_dashscope_api_key()
 
         try:
             self.client = OpenAI(
-                api_key=self.api_key,
+                api_key=api_key,
                 base_url=DASHSCOPE_COMPATIBLE_BASE_URL,
             )
         except OpenAIError as exc:
@@ -57,7 +56,7 @@ class DashScopeEmbeddings(Embeddings):
 
 
 vector_embedding_service = DashScopeEmbeddings(
-    api_key=config.dashscope_api_key,
+    api_key=None,
     model=config.dashscope_embedding_model,
     dimensions=DEFAULT_EMBEDDING_DIMENSIONS,
 )

@@ -7,7 +7,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from loguru import logger
 
 from app.agent.mcp_client import get_mcp_client_with_retry, load_mcp_tools_safe
-from app.config import config
+from app.config import config, get_dashscope_api_key
 from app.tools import DEFAULT_LOCAL_AGENT_TOOLS
 
 DASHSCOPE_COMPATIBLE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
@@ -15,13 +15,7 @@ DASHSCOPE_COMPATIBLE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/
 
 class RagAgentService:
     def __init__(self) -> None:
-        self._api_key = config.dashscope_api_key or "missing-dashscope-api-key"
-        self.model = ChatQwen(
-            model=config.rag_model,
-            api_key=self._api_key,
-            base_url=DASHSCOPE_COMPATIBLE_BASE_URL,
-            streaming=True,
-        )
+        self.model: ChatQwen | None = None
         self.checkpointer = MemorySaver()
         self.system_prompt = self._build_system_prompt()
         self.agent = None
@@ -31,7 +25,6 @@ class RagAgentService:
         if self._initialized:
             return
 
-        self._ensure_api_key()
         mcp_client = await get_mcp_client_with_retry()
         mcp_tools, error_message = await load_mcp_tools_safe(mcp_client)
         if error_message:
@@ -39,7 +32,7 @@ class RagAgentService:
 
         all_tools = [*DEFAULT_LOCAL_AGENT_TOOLS, *mcp_tools]
         self.agent = create_agent(
-            self.model,
+            self._get_model(),
             tools=all_tools,
             checkpointer=self.checkpointer,
         )
@@ -96,9 +89,16 @@ class RagAgentService:
     def _build_config(self, session_id: str) -> dict[str, dict[str, str]]:
         return {"configurable": {"thread_id": session_id}}
 
-    def _ensure_api_key(self) -> None:
-        if not config.dashscope_api_key:
-            raise RuntimeError("DASHSCOPE_API_KEY 未配置，无法调用 RAG Agent 模型。")
+    def _get_model(self) -> ChatQwen:
+        if self.model is None:
+            self.model = ChatQwen(
+                model=config.rag_model,
+                api_key=get_dashscope_api_key(),
+                base_url=DASHSCOPE_COMPATIBLE_BASE_URL,
+                streaming=True,
+            )
+
+        return self.model
 
 
 rag_agent_service = RagAgentService()

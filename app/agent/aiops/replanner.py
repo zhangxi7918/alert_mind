@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from app.agent.aiops.planner import DASHSCOPE_COMPATIBLE_BASE_URL
 from app.agent.aiops.state import PlanExecuteState
-from app.config import config
+from app.config import config, get_dashscope_api_key
 
 
 class ReplanDecision(BaseModel):
@@ -68,7 +68,7 @@ async def replanner(state: PlanExecuteState) -> dict[str, str | List[str]]:
 
     llm = ChatQwen(
         model=config.rag_model,
-        api_key=config.dashscope_api_key or "missing-dashscope-api-key",
+        api_key=get_dashscope_api_key(),
         base_url=DASHSCOPE_COMPATIBLE_BASE_URL,
         streaming=False,
     )
