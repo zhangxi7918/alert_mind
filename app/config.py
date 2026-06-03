@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     rag_model: str = "qwen-max"
     # 相关性阈值：[0, 1]，越大越严格；低于阈值的结果会被过滤
     rag_score_threshold: float = 0.5
+    # Rerank 配置：开启后先粗召回 rag_rerank_top_n 条，再精排取 rag_top_k 条
+    rag_rerank_enabled: bool = False
+    rag_rerank_top_n: int = 20
+    rag_rerank_model: str = "gte-rerank-v2"
 
 config = Settings()
 

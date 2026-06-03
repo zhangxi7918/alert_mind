@@ -187,6 +187,11 @@
   - 新增 `retrieve_knowledge` LangChain tool，将向量检索结果按换行拼接为字符串。
   - 在 `app.tools` 包入口导出 `DEFAULT_LOCAL_AGENT_TOOLS`，集中维护 Agent 默认本地工具列表。
   - 增加 `langchain` 依赖以支持 `@tool` 装饰器。
+- feat(rag): 实现 Rerank 二阶段检索，支持 ANN 粗召回 + DashScope gte-rerank-v2 精排（2026-06-03）
+  - 新增 `RerankService`，调用 DashScope text-rerank API，失败时自动降级为原始排序。
+  - `VectorSearchService` 根据 `rag_rerank_enabled` 配置切换单阶段/两阶段路径。
+  - 新增 `scripts/compare_rerank.py`，对比 ANN top-k 与 Rerank 后结果的差异。
+  - 实测：4 个查询中 3 个排序有变化，跑题 chunk 被替换，跨文档补充更准确。
 - fix(embedding): embed_documents 按 batch=10 分批调用，修复 DashScope 超出批量限制报错（2026-06-03）
 - feat(rag): 添加检索相关性阈值过滤（2026-06-03）
   - `similarity_search` 增加 `score_threshold` 参数，使用 `similarity_search_with_relevance_scores` 过滤低相关结果。
