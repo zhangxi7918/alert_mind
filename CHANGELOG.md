@@ -105,6 +105,20 @@
   - AIOps 前端改为结构化状态面板，状态和计划更新复用固定区域，避免过程日志挤占诊断报告。
   - 诊断报告支持前端分块揭示，并为运行状态和当前步骤增加轻量动效，保留流式推进感。
 
+## Prometheus 监控接入
+
+- feat(prometheus): 添加 Prometheus + Node Exporter 本地监控环境（2026-06-03）
+  - 新增 `docker-compose.yml`，定义 `alert_mind_prometheus`（9090）和 `alert_mind_node_exporter`（9100）两个容器。
+  - 新增 `prometheus/prometheus.yml`，配置 15s 采集间隔并指向 node_exporter 采集目标。
+  - 新增 `prometheus/alert_rules.yml`，定义高 CPU（>80% 持续 30s）、高内存（>85%）、高磁盘（>90%）三条告警规则。
+- feat(mcp): 为 monitor_server 添加真实 Prometheus 查询工具（2026-06-03）
+  - 新增 `query_active_alerts(severity?)`，调用 Prometheus `/api/v1/alerts` 返回当前 firing/pending 告警。
+  - 新增 `query_metric_history(metric, duration_minutes, step_seconds)`，调用 `/api/v1/query_range` 返回 CPU/内存/磁盘历史曲线，含 max/avg 摘要。
+  - `config.py` 新增 `prometheus_base_url` 配置项，默认 `http://localhost:9090`。
+  - 保留原有 `query_metrics` / `query_alerts` 模拟工具，与真实工具并存。
+- fix(static): 修正 AI Ops 默认触发 prompt，使 Agent 优先调用真实 Prometheus 工具（2026-06-03）
+  - 将前端默认 prompt 从泛化的"常见告警分析"改为明确指定调用 `query_active_alerts` 和 `query_metric_history`。
+
 ## 健康检查接口
 
 - feat(api): 添加健康检查路由（2026-05-30）

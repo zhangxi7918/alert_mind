@@ -1,0 +1,32 @@
+groups:
+  - name: system_alerts
+    rules:
+      # CPU 使用率超过 80% 持续 1 分钟
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100) > 80
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "高 CPU 使用率告警"
+          description: "实例 {{ $labels.instance }} CPU 使用率已超过 80%，当前值：{{ $value | printf \"%.1f\" }}%"
+
+      # 内存使用率超过 85% 持续 1 分钟
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高内存使用率告警"
+          description: "实例 {{ $labels.instance }} 内存使用率已超过 85%，当前值：{{ $value | printf \"%.1f\" }}%"
+
+      # 磁盘使用率超过 90%
+      - alert: HighDiskUsage
+        expr: (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"})) * 100 > 90
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高磁盘使用率告警"
+          description: "实例 {{ $labels.instance }} 挂载点 {{ $labels.mountpoint }} 磁盘使用率已超过 90%，当前值：{{ $value | printf \"%.1f\" }}%"
