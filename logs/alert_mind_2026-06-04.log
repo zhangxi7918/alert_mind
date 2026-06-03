@@ -1,0 +1,10 @@
+2026-06-04 00:09:57.129 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 00:09:57.130 | INFO     | app.services.rag_agent_service:35 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 00:10:03.957 | INFO     | app.main:71 - GET / 200 7ms
+2026-06-04 00:10:04.359 | INFO     | app.main:71 - GET /static/styles.css 200 1ms
+2026-06-04 00:10:04.362 | INFO     | app.main:71 - GET /static/app.js 200 1ms
+2026-06-04 00:10:07.543 | INFO     | app.main:71 - GET /api/session/session_trvbuzlr9_1780500632965/history 200 435ms
+2026-06-04 00:10:09.525 | INFO     | app.main:71 - GET /api/session/session_tno6t3569_1780500680150/history 200 3ms
+2026-06-04 00:10:16.313 | INFO     | app.main:71 - POST /api/chat/stream 200 10ms
+2026-06-04 00:10:24.373 | INFO     | app.main:71 - POST /api/chat/stream 200 3ms
+2026-06-04 00:11:32.998 | INFO     | app.main:71 - GET /api/session/session_my4jdwz9z_1780503011063/history 200 28ms

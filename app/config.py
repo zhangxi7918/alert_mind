@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     # Prometheus 配置
     prometheus_base_url: str = "http://localhost:9090"
 
+    # Redis 配置
+    redis_url: str = "redis://localhost:6379"
+
     # 文档分块配置
     chunk_max_size: int = 800
     chunk_overlap: int = 100
