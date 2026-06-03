@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 from typing import Annotated
 
@@ -5,11 +6,12 @@ import aiofiles
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.models.response import UploadResponse
+from app.services.document_extractor import SUPPORTED_EXTENSIONS, extract_text
 from app.services.document_splitter_service import document_splitter_service
 from app.services.vector_index_service import vector_index_service
 
 UPLOAD_DIR = Path("uploads")
-ALLOWED_UPLOAD_EXTENSIONS = {".txt", ".md", ".markdown"}
+ALLOWED_UPLOAD_EXTENSIONS = SUPPORTED_EXTENSIONS
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 
 router = APIRouter()
@@ -22,7 +24,10 @@ async def upload_file(file: Annotated[UploadFile, File(...)]) -> UploadResponse:
         raise HTTPException(status_code=400, detail="上传文件名不能为空")
 
     if Path(filename).suffix.lower() not in ALLOWED_UPLOAD_EXTENSIONS:
-        raise HTTPException(status_code=400, detail="只支持上传 TXT 或 Markdown 文件")
+        raise HTTPException(
+            status_code=400,
+            detail="只支持上传 TXT、Markdown、PDF 或 Word(.docx) 文件",
+        )
 
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     file_path = UPLOAD_DIR / filename
@@ -37,12 +42,15 @@ async def upload_file(file: Annotated[UploadFile, File(...)]) -> UploadResponse:
 
             await output_file.write(chunk)
 
+    # 解析为同步阻塞操作（PDF/Word 尤甚），放线程池避免阻塞事件循环
     try:
-        async with aiofiles.open(file_path, encoding="utf-8") as input_file:
-            content = await input_file.read()
+        content = await asyncio.to_thread(extract_text, file_path)
     except UnicodeDecodeError as exc:
         file_path.unlink(missing_ok=True)
         raise HTTPException(status_code=400, detail="文件必须使用 UTF-8 编码") from exc
+    except Exception as exc:
+        file_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=400, detail=f"文件解析失败：{exc}") from exc
 
     if not content.strip():
         file_path.unlink(missing_ok=True)
