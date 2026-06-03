@@ -69,3 +69,26 @@
 2026-06-03 23:14:43.712 | INFO     | app.main:66 - POST /api/files/upload 200 86ms
 2026-06-03 23:14:49.319 | INFO     | app.main:66 - POST /api/files/upload 200 353ms
 2026-06-03 23:14:54.164 | INFO     | app.main:66 - POST /api/files/upload 200 414ms
+2026-06-03 23:20:19.627 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 23:20:24.180 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 23:20:32.169 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 23:20:36.839 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 23:20:43.901 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 23:22:36.778 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 23:30:26.217 | INFO     | app.main:66 - GET / 200 13ms
+2026-06-03 23:30:26.291 | INFO     | app.main:66 - GET /static/styles.css 200 5ms
+2026-06-03 23:30:26.293 | INFO     | app.main:66 - GET /static/app.js 200 3ms
+2026-06-03 23:30:29.440 | INFO     | app.main:66 - GET /api/session/session_ogpzhkb9d_1780480902803/history 200 551ms
+2026-06-03 23:30:30.740 | INFO     | app.main:66 - GET /api/session/session_e765cll0v_1780410326680/history 200 1ms
+2026-06-03 23:30:35.171 | INFO     | app.main:66 - POST /api/chat/stream 200 9ms
+2026-06-03 23:30:48.888 | INFO     | app.main:66 - POST /api/chat/stream 200 13ms
+2026-06-03 23:30:51.874 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-03 23:31:14.026 | INFO     | app.main:66 - GET /api/session/session_trvbuzlr9_1780500632965/history 200 6ms
+2026-06-03 23:31:17.435 | INFO     | app.main:66 - GET /api/session/session_trvbuzlr9_1780500632965/history 200 2ms
+2026-06-03 23:31:20.160 | INFO     | app.main:66 - POST /api/aiops/query 200 4ms
+2026-06-03 23:31:20.803 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-03 23:32:52.872 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> BrokenResourceError: 
+2026-06-03 23:32:57.509 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-03 23:32:57.530 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-03 23:32:57.536 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-03 23:34:11.178 | INFO     | app.main:66 - GET /api/session/session_tno6t3569_1780500680150/history 200 5ms

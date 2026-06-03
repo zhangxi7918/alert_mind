@@ -12,3 +12,24 @@ class UploadResponse(BaseModel):
     skipped_count: int = Field(default=0, description="因重复而跳过的 chunk 数量")
     status: Literal["success", "error"] = Field(description="上传处理状态")
     message: str | None = Field(default=None, description="可选的描述信息")
+
+
+class SessionMessage(BaseModel):
+    """单条会话消息，仅区分用户与助手两种角色。"""
+
+    role: Literal["user", "assistant"] = Field(description="消息角色")
+    content: str = Field(description="消息文本内容")
+
+
+class SessionHistoryResponse(BaseModel):
+    """Response payload for session history retrieval."""
+
+    session_id: str = Field(description="会话 ID")
+    messages: list[SessionMessage] = Field(description="按时间排序的会话消息")
+
+
+class ClearSessionResponse(BaseModel):
+    """Response payload returned after a session is cleared."""
+
+    session_id: str = Field(description="会话 ID")
+    status: Literal["cleared"] = Field(description="清空处理状态")

@@ -49,6 +49,9 @@
   - 初始模式文案和下拉选中状态同步显示为“流式”，保留“快速”作为手动回退模式。
 - feat(static): 文件上传放开 PDF 与 Word(.docx) 类型（2026-06-03）
   - `fileInput` 的 accept 增加 `.pdf,.docx`，前端 `allowedExtensions` 与提示文案同步更新，与后端支持的格式对齐。
+- feat(static): 对接会话历史读取与清空接口（2026-06-03）
+  - 读取历史 URL 改为 `GET /api/session/{id}/history`，响应字段由 `data.history` 改为 `data.messages`。
+  - 清空会话改为 `DELETE /api/session/{id}`，状态判断由 `'success'` 改为 `'cleared'`，去掉 POST body。
 
 ## RAG Agent 服务
 
@@ -72,6 +75,10 @@
   - 新增 `POST /chat` 非流式问答接口，返回 `answer` 与 `session_id`。
   - 新增 `POST /chat/stream` SSE 流式问答接口，将 Agent chunk 序列化为 JSON 事件数据。
   - 在 FastAPI 入口以 `/api` 前缀和“智能问答”标签注册聊天路由。
+- feat(api): 添加会话管理接口（2026-06-03）
+  - 新增 `GET /api/session/{session_id}/history` 读取会话历史，过滤系统提示与纯工具调用消息，仅返回 user/assistant 文本。
+  - 新增 `DELETE /api/session/{session_id}` 清空会话，委托 `MemorySaver.adelete_thread`，无历史时调用同样安全。
+  - `RagAgentService` 增加 `get_history()` 与 `clear_session()`，并新增 `SessionHistoryResponse`、`ClearSessionResponse` 响应模型。
 - fix(agent): 显式配置 DashScope 国内兼容模式地址（2026-06-01）
   - 为 `ChatQwen` 设置 `base_url`，避免默认请求国际站导致国内 DashScope API Key 认证失败。
 - feat(agent): 添加 AIOps 执行状态类型定义（2026-06-01）
