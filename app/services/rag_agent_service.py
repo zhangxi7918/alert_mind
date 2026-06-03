@@ -1,7 +1,12 @@
 from collections.abc import AsyncIterator
 
 from langchain.agents import create_agent
-from langchain_core.messages import AIMessageChunk, HumanMessage, SystemMessage
+from langchain_core.messages import (
+    AIMessage,
+    AIMessageChunk,
+    HumanMessage,
+    SystemMessage,
+)
 from langchain_qwq import ChatQwen
 from langgraph.checkpoint.memory import MemorySaver
 from loguru import logger
@@ -67,6 +72,41 @@ class RagAgentService:
                     yield {"type": "content", "data": block.get("text", "")}
 
         yield {"type": "complete"}
+
+    async def get_history(self, session_id: str) -> list[dict[str, str]]:
+        """读取指定会话的对话历史，仅保留用户提问与助手有效回答。"""
+        await self._initialize_agent()
+
+        snapshot = await self.agent.aget_state(self._build_config(session_id))
+        messages = snapshot.values.get("messages", [])
+
+        history: list[dict[str, str]] = []
+        for message in messages:
+            if isinstance(message, HumanMessage):
+                history.append({"role": "user", "content": self._message_text(message)})
+            elif isinstance(message, AIMessage):
+                text = self._message_text(message)
+                # 仅含工具调用、无文本的 AI 消息不展示给前端
+                if text:
+                    history.append({"role": "assistant", "content": text})
+
+        return history
+
+    async def clear_session(self, session_id: str) -> None:
+        """清空指定会话的全部 checkpoint 状态，无历史时调用同样安全。"""
+        await self.checkpointer.adelete_thread(session_id)
+
+    def _message_text(self, message: AIMessage | HumanMessage) -> str:
+        """提取消息文本：兼容字符串与 content blocks 两种内容形态。"""
+        content = message.content
+        if isinstance(content, str):
+            return content
+
+        return "".join(
+            block.get("text", "")
+            for block in content
+            if isinstance(block, dict) and block.get("type") == "text"
+        )
 
     def _build_system_prompt(self) -> str:
         return (

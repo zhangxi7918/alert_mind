@@ -447,10 +447,10 @@ class SuperBizAgentApp {
         
         try {
             // 从后端获取会话历史
-            const response = await fetch(`/api/chat/session/${historyId}`);
+            const response = await fetch(`/api/session/${historyId}/history`);
             if (response.ok) {
                 const data = await response.json();
-                const backendHistory = data.history || [];
+                const backendHistory = data.messages || [];
                 
                 // 更新会话ID
                 this.sessionId = history.id;
@@ -514,14 +514,8 @@ class SuperBizAgentApp {
     async deleteChatHistory(historyId) {
         try {
             // 调用后端API清空会话
-            const response = await fetch('/api/chat/clear', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    session_id: historyId
-                })
+            const response = await fetch(`/api/session/${historyId}`, {
+                method: 'DELETE',
             });
 
             if (!response.ok) {
@@ -530,7 +524,7 @@ class SuperBizAgentApp {
 
             const result = await response.json();
             
-            if (result.status === 'success') {
+            if (result.status === 'cleared') {
                 // 从本地存储中删除
                 this.chatHistories = this.chatHistories.filter(h => h.id !== historyId);
                 this.saveChatHistories();
