@@ -274,8 +274,8 @@ class SuperBizAgentApp {
         // 生成新的会话ID
         this.sessionId = this.generateSessionId();
         
-        // 重置模式为快速
-        this.currentMode = 'quick';
+        // 新建对话保持流式模式
+        this.currentMode = 'stream';
         this.updateUI();
         
         // 重新设置居中样式（确保对话框居中显示）
