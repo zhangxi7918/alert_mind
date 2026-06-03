@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     # RAG 配置
     rag_top_k: int = 3
     rag_model: str = "qwen-max"
+    # 相关性阈值：[0, 1]，越大越严格；低于阈值的结果会被过滤
+    rag_score_threshold: float = 0.5
 
 config = Settings()
 

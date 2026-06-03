@@ -90,8 +90,13 @@ class VectorStoreManager:
 
         return self._get_vector_store().add_documents(docs, ids=ids)
 
-    def similarity_search(self, query: str, k: int) -> list[Document]:
-        return self._get_vector_store().similarity_search(query, k=k)
+    def similarity_search(self, query: str, k: int, score_threshold: float | None = None) -> list[Document]:
+        if score_threshold is None:
+            return self._get_vector_store().similarity_search(query, k=k)
+
+        results = self._get_vector_store().similarity_search_with_relevance_scores(query, k=k)
+        # relevance_score 越大越相关，过滤掉低于阈值的结果
+        return [doc for doc, score in results if score >= score_threshold]
 
 
 vector_store_manager = VectorStoreManager()

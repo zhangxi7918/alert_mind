@@ -187,6 +187,10 @@
   - 新增 `retrieve_knowledge` LangChain tool，将向量检索结果按换行拼接为字符串。
   - 在 `app.tools` 包入口导出 `DEFAULT_LOCAL_AGENT_TOOLS`，集中维护 Agent 默认本地工具列表。
   - 增加 `langchain` 依赖以支持 `@tool` 装饰器。
+- feat(rag): 添加检索相关性阈值过滤（2026-06-03）
+  - `similarity_search` 增加 `score_threshold` 参数，使用 `similarity_search_with_relevance_scores` 过滤低相关结果。
+  - `VectorSearchService` 传入 `rag_score_threshold` 配置，无相关结果时打印 warning 日志。
+  - `config.py` 新增 `rag_score_threshold: float = 0.5`，可通过环境变量 `RAG_SCORE_THRESHOLD` 覆盖。
 - feat(app): 在 FastAPI lifespan 中接入 Milvus 连接管理（2026-05-31）
   - 服务启动时调用 `vector_store_manager.initialize()`，关闭时调用 `vector_store_manager.close()`。
   - 将 Milvus 生命周期入口从底层 client manager 收口到向量存储管理器。
