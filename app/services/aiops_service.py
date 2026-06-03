@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 from typing import Any, Literal
+from uuid import uuid4
 
 from langgraph.graph import END, StateGraph
 
@@ -108,8 +109,10 @@ class AIOpsService:
         return "continue"
 
     async def run_stream(self, input_text: str) -> AsyncIterator[dict[str, Any]]:
+        request_id = str(uuid4())
         async for stream_mode, payload in self.app.astream(
             self._build_initial_state(input_text),
+            config=self._build_trace_config(request_id),
             stream_mode=["custom", "updates"],
         ):
             for event in _events_from_stream_payload(stream_mode, payload):
@@ -122,7 +125,11 @@ class AIOpsService:
         }
 
     async def run(self, input_text: str) -> PlanExecuteState:
-        return await self.app.ainvoke(self._build_initial_state(input_text))
+        request_id = str(uuid4())
+        return await self.app.ainvoke(
+            self._build_initial_state(input_text),
+            config=self._build_trace_config(request_id),
+        )
 
     def _build_initial_state(self, input_text: str) -> PlanExecuteState:
         return {
@@ -130,6 +137,17 @@ class AIOpsService:
             "plan": [],
             "past_steps": [],
             "response": "",
+        }
+
+    def _build_trace_config(self, request_id: str) -> dict[str, Any]:
+        return {
+            "configurable": {"thread_id": request_id},
+            "run_name": "aiops_diagnosis",
+            "tags": ["alert-mind", "aiops", "plan-execute-replan"],
+            "metadata": {
+                "request_id": request_id,
+                "entrypoint": "aiops",
+            },
         }
 
 

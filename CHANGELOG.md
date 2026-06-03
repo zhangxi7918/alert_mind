@@ -1,3 +1,9 @@
+## 可观测性
+
+- feat(observability): 接入 LangSmith trace 配置（2026-06-04）
+  - RAG Chat 与 AIOps Graph 调用补充 `run_name`、`tags` 和 `metadata`，便于在 LangSmith 中按入口和会话筛选 trace。
+  - `.env.example` 增加 LangSmith 环境变量示例和本地启动说明。
+
 ## Logger 文件配置
 
 - feat(main): 新增 HTTP 请求日志中间件，自动记录方法、路径、状态码、耗时（2026-06-03）

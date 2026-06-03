@@ -89,6 +89,24 @@ class GetHistoryTest(unittest.TestCase):
         self.assertEqual(history, [])
 
 
+class RagTraceConfigTest(unittest.TestCase):
+    def test_build_config_includes_langsmith_trace_fields(self) -> None:
+        service = RagAgentService()
+
+        agent_config = service._build_config("s1")
+
+        self.assertEqual(agent_config["configurable"], {"thread_id": "s1"})
+        self.assertEqual(agent_config["run_name"], "rag_chat")
+        self.assertEqual(agent_config["tags"], ["alert-mind", "rag"])
+        self.assertEqual(
+            agent_config["metadata"],
+            {
+                "session_id": "s1",
+                "entrypoint": "chat",
+            },
+        )
+
+
 class ClearSessionTest(unittest.TestCase):
     def test_delegates_to_checkpointer(self) -> None:
         service = RagAgentService()

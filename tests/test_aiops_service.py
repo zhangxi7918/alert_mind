@@ -6,7 +6,41 @@ from unittest.mock import AsyncMock, patch
 
 from app.agent.aiops.executor import executor
 from app.agent.aiops.state import PlanExecuteState
-from app.services.aiops_service import _events_from_stream_payload
+from app.services.aiops_service import AIOpsService, _events_from_stream_payload
+
+
+class FakeAIOpsStreamApp:
+    def __init__(self) -> None:
+        self.astream_calls = []
+
+    async def astream(self, initial_state, *, config, stream_mode):
+        self.astream_calls.append(
+            {
+                "initial_state": initial_state,
+                "config": config,
+                "stream_mode": stream_mode,
+            }
+        )
+        yield "updates", {}
+
+
+class FakeAIOpsInvokeApp:
+    def __init__(self) -> None:
+        self.ainvoke_calls = []
+
+    async def ainvoke(self, initial_state, *, config):
+        self.ainvoke_calls.append(
+            {
+                "initial_state": initial_state,
+                "config": config,
+            }
+        )
+        return {
+            "input": initial_state["input"],
+            "plan": [],
+            "past_steps": [],
+            "response": "完成",
+        }
 
 
 class AIOpsEventConversionTest(unittest.TestCase):
@@ -73,6 +107,47 @@ class AIOpsEventConversionTest(unittest.TestCase):
         self.assertEqual(events[0]["type"], "report")
         self.assertEqual(events[0]["stage"], "final_report")
         self.assertEqual(events[0]["report"], "## 诊断报告")
+
+
+class AIOpsTraceConfigTest(unittest.IsolatedAsyncioTestCase):
+    def _expected_trace_config(self) -> dict:
+        return {
+            "configurable": {"thread_id": "request-123"},
+            "run_name": "aiops_diagnosis",
+            "tags": ["alert-mind", "aiops", "plan-execute-replan"],
+            "metadata": {
+                "request_id": "request-123",
+                "entrypoint": "aiops",
+            },
+        }
+
+    async def test_run_stream_passes_langsmith_trace_config(self) -> None:
+        service = AIOpsService()
+        fake_app = FakeAIOpsStreamApp()
+        service.app = fake_app
+
+        with patch("app.services.aiops_service.uuid4", return_value="request-123"):
+            events = [event async for event in service.run_stream("诊断服务")]
+
+        self.assertEqual(events[-1]["type"], "complete")
+        self.assertEqual(fake_app.astream_calls[0]["initial_state"]["input"], "诊断服务")
+        self.assertEqual(
+            fake_app.astream_calls[0]["stream_mode"],
+            ["custom", "updates"],
+        )
+        self.assertEqual(fake_app.astream_calls[0]["config"], self._expected_trace_config())
+
+    async def test_run_passes_langsmith_trace_config(self) -> None:
+        service = AIOpsService()
+        fake_app = FakeAIOpsInvokeApp()
+        service.app = fake_app
+
+        with patch("app.services.aiops_service.uuid4", return_value="request-123"):
+            result = await service.run("诊断服务")
+
+        self.assertEqual(result["response"], "完成")
+        self.assertEqual(fake_app.ainvoke_calls[0]["initial_state"]["input"], "诊断服务")
+        self.assertEqual(fake_app.ainvoke_calls[0]["config"], self._expected_trace_config())
 
 
 class AIOpsStateAndExecutorTest(unittest.IsolatedAsyncioTestCase):

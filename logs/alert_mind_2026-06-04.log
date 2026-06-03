@@ -8,3 +8,7 @@
 2026-06-04 00:10:16.313 | INFO     | app.main:71 - POST /api/chat/stream 200 10ms
 2026-06-04 00:10:24.373 | INFO     | app.main:71 - POST /api/chat/stream 200 3ms
 2026-06-04 00:11:32.998 | INFO     | app.main:71 - GET /api/session/session_my4jdwz9z_1780503011063/history 200 28ms
+2026-06-04 00:45:49.981 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 00:45:49.982 | INFO     | app.services.rag_agent_service:35 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 00:46:04.459 | INFO     | app.main:71 - POST /api/aiops/query 200 92ms
+2026-06-04 00:46:05.476 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
