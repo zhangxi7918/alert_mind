@@ -8,7 +8,7 @@ from langchain_core.messages import (
     SystemMessage,
 )
 from langchain_qwq import ChatQwen
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.redis.aio import AsyncRedisSaver
 from loguru import logger
 
 from app.agent.mcp_client import get_mcp_client_with_retry, load_mcp_tools_safe
@@ -21,8 +21,37 @@ DASHSCOPE_COMPATIBLE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/
 class RagAgentService:
     def __init__(self) -> None:
         self.model: ChatQwen | None = None
-        self.checkpointer = MemorySaver()
+        self.checkpointer = None
+        self._checkpointer_context = None
         self.system_prompt = self._build_system_prompt()
+        self.agent = None
+        self._initialized = False
+
+    async def initialize_checkpointer(self) -> None:
+        """连接 Redis checkpointer；失败时抛出异常，让应用启动中止。"""
+        if self.checkpointer is not None:
+            return
+
+        logger.info("初始化 Redis 会话记忆：{}", config.redis_url)
+        context = AsyncRedisSaver.from_conn_string(config.redis_url)
+        checkpointer = await context.__aenter__()
+        try:
+            await checkpointer.asetup()
+        except Exception as exc:
+            await context.__aexit__(type(exc), exc, exc.__traceback__)
+            raise
+
+        self._checkpointer_context = context
+        self.checkpointer = checkpointer
+
+    async def close(self) -> None:
+        """关闭 Redis checkpointer 连接并重置 Agent，便于下次启动重新初始化。"""
+        if self._checkpointer_context is None:
+            return
+
+        await self._checkpointer_context.__aexit__(None, None, None)
+        self._checkpointer_context = None
+        self.checkpointer = None
         self.agent = None
         self._initialized = False
 
@@ -30,6 +59,7 @@ class RagAgentService:
         if self._initialized:
             return
 
+        await self.initialize_checkpointer()
         mcp_client = await get_mcp_client_with_retry()
         mcp_tools, error_message = await load_mcp_tools_safe(mcp_client)
         if error_message:
@@ -94,6 +124,7 @@ class RagAgentService:
 
     async def clear_session(self, session_id: str) -> None:
         """清空指定会话的全部 checkpoint 状态，无历史时调用同样安全。"""
+        await self.initialize_checkpointer()
         await self.checkpointer.adelete_thread(session_id)
 
     def _message_text(self, message: AIMessage | HumanMessage) -> str:

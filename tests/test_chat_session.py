@@ -1,7 +1,7 @@
 import asyncio
 from types import SimpleNamespace
 import unittest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from langchain_core.messages import (
     AIMessage,
@@ -11,6 +11,20 @@ from langchain_core.messages import (
 )
 
 from app.services.rag_agent_service import RagAgentService
+
+
+class FakeAsyncRedisContext:
+    def __init__(self, checkpointer: SimpleNamespace) -> None:
+        self.checkpointer = checkpointer
+        self.entered = False
+        self.exited = False
+
+    async def __aenter__(self) -> SimpleNamespace:
+        self.entered = True
+        return self.checkpointer
+
+    async def __aexit__(self, _exc_type, _exc, _traceback) -> None:
+        self.exited = True
 
 
 class GetHistoryTest(unittest.TestCase):
@@ -78,11 +92,53 @@ class GetHistoryTest(unittest.TestCase):
 class ClearSessionTest(unittest.TestCase):
     def test_delegates_to_checkpointer(self) -> None:
         service = RagAgentService()
-        service.checkpointer.adelete_thread = AsyncMock()
+        service.checkpointer = SimpleNamespace(adelete_thread=AsyncMock())
 
         asyncio.run(service.clear_session("s1"))
 
         service.checkpointer.adelete_thread.assert_awaited_once_with("s1")
+
+
+class RedisCheckpointerLifecycleTest(unittest.TestCase):
+    def test_initialize_checkpointer_sets_up_redis_saver(self) -> None:
+        service = RagAgentService()
+        fake_checkpointer = SimpleNamespace(
+            asetup=AsyncMock(),
+            adelete_thread=AsyncMock(),
+        )
+        fake_context = FakeAsyncRedisContext(fake_checkpointer)
+
+        with patch(
+            "app.services.rag_agent_service.AsyncRedisSaver.from_conn_string",
+            return_value=fake_context,
+        ) as factory:
+            asyncio.run(service.initialize_checkpointer())
+
+        factory.assert_called_once()
+        self.assertTrue(fake_context.entered)
+        fake_checkpointer.asetup.assert_awaited_once()
+        self.assertIs(service.checkpointer, fake_checkpointer)
+
+    def test_close_exits_redis_context_and_resets_agent(self) -> None:
+        service = RagAgentService()
+        fake_checkpointer = SimpleNamespace(asetup=AsyncMock())
+        fake_context = FakeAsyncRedisContext(fake_checkpointer)
+
+        with patch(
+            "app.services.rag_agent_service.AsyncRedisSaver.from_conn_string",
+            return_value=fake_context,
+        ):
+            asyncio.run(service.initialize_checkpointer())
+
+        service.agent = object()
+        service._initialized = True
+
+        asyncio.run(service.close())
+
+        self.assertTrue(fake_context.exited)
+        self.assertIsNone(service.checkpointer)
+        self.assertIsNone(service.agent)
+        self.assertFalse(service._initialized)
 
 
 if __name__ == "__main__":
