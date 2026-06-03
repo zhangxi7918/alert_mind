@@ -55,3 +55,17 @@
 2026-06-03 18:01:42.537 | INFO     | app.main:66 - GET /static/app.js 200 3ms
 2026-06-03 18:02:16.374 | INFO     | app.main:66 - POST /api/chat/stream 200 20ms
 2026-06-03 18:02:19.968 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-03 22:55:49.360 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 22:56:03.186 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 23:00:45.311 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 23:08:12.437 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 23:14:02.023 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 23:14:11.873 | INFO     | app.main:66 - GET / 200 5ms
+2026-06-03 23:14:11.916 | INFO     | app.main:66 - GET /static/styles.css 200 1ms
+2026-06-03 23:14:11.923 | INFO     | app.main:66 - GET /static/app.js 200 2ms
+2026-06-03 23:14:13.313 | INFO     | app.main:66 - GET /favicon.ico 404 0ms
+2026-06-03 23:14:29.638 | INFO     | app.main:66 - POST /api/files/upload 200 1076ms
+2026-06-03 23:14:37.656 | INFO     | app.main:66 - POST /api/files/upload 200 480ms
+2026-06-03 23:14:43.712 | INFO     | app.main:66 - POST /api/files/upload 200 86ms
+2026-06-03 23:14:49.319 | INFO     | app.main:66 - POST /api/files/upload 200 353ms
+2026-06-03 23:14:54.164 | INFO     | app.main:66 - POST /api/files/upload 200 414ms
