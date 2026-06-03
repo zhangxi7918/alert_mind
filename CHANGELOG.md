@@ -105,6 +105,15 @@
   - AIOps 前端改为结构化状态面板，状态和计划更新复用固定区域，避免过程日志挤占诊断报告。
   - 诊断报告支持前端分块揭示，并为运行状态和当前步骤增加轻量动效，保留流式推进感。
 
+## 知识库 Runbook 文档
+
+- feat(knowledge): 添加四篇运维 Runbook 并上传至向量知识库（2026-06-03）
+  - 新增 `uploads/runbook_high_cpu.md`：高 CPU 使用率处理手册，含 Prometheus 查询、进程定位、临时缓解和升级路径。
+  - 新增 `uploads/runbook_high_memory.md`：内存不足处理手册，含 `MemAvailable` 说明、OOM Kill 查看命令和 Swap 处置方法。
+  - 新增 `uploads/runbook_disk_space.md`：磁盘空间告警处理手册，含大文件定位、Docker 清理和 logrotate 建议。
+  - 新增 `uploads/runbook_service_timeout.md`：服务响应超时处理手册，含数据库慢查询、GC 停顿排查和熔断降级策略。
+  - 通过 `POST /api/files/upload` 入库，共 9 个 chunks 写入 Milvus 向量库；RAG 检索测试验证 CPU 查询精确命中对应手册。
+
 ## Prometheus 监控接入
 
 - feat(prometheus): 添加 Prometheus + Node Exporter 本地监控环境（2026-06-03）
