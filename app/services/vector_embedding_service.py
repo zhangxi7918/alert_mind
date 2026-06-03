@@ -20,14 +20,20 @@ class DashScopeEmbeddings(Embeddings):
         self.model = model
         self.dimensions = dimensions
 
-    def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        response = self._get_client().embeddings.create(
-            model=self.model,
-            input=texts,
-            dimensions=self.dimensions,
-        )
+    # DashScope embedding API 单次最多接受 10 条文本
+    BATCH_SIZE = 10
 
-        return [embedding_data.embedding for embedding_data in response.data]
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        results = []
+        for i in range(0, len(texts), self.BATCH_SIZE):
+            batch = texts[i : i + self.BATCH_SIZE]
+            response = self._get_client().embeddings.create(
+                model=self.model,
+                input=batch,
+                dimensions=self.dimensions,
+            )
+            results.extend(embedding_data.embedding for embedding_data in response.data)
+        return results
 
     def embed_query(self, text: str) -> list[float]:
         response = self._get_client().embeddings.create(
