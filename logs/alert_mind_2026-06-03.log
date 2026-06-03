@@ -8,3 +8,22 @@
 2026-06-03 14:49:25.127 | INFO     | app.main:66 - POST /api/chat 200 13994ms
 2026-06-03 15:53:08.150 | INFO     | app.main:40 - 服务启动中...
 2026-06-03 15:59:55.436 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 16:44:06.489 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 16:52:43.226 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 16:53:55.872 | INFO     | app.main:66 - GET / 200 14ms
+2026-06-03 16:53:56.058 | INFO     | app.main:66 - GET /static/styles.css 200 4ms
+2026-06-03 16:53:56.061 | INFO     | app.main:66 - GET /static/app.js 200 1ms
+2026-06-03 16:53:56.069 | INFO     | app.main:66 - GET /.well-known/appspecific/com.chrome.devtools.json 404 2ms
+2026-06-03 16:54:06.460 | INFO     | app.main:66 - POST /api/chat/stream 200 10ms
+2026-06-03 16:56:58.304 | INFO     | app.main:40 - 服务启动中...
+2026-06-03 17:00:04.889 | INFO     | app.main:66 - GET / 200 6ms
+2026-06-03 17:00:04.968 | INFO     | app.main:66 - GET /static/styles.css 200 9ms
+2026-06-03 17:00:04.972 | INFO     | app.main:66 - GET /static/app.js 200 5ms
+2026-06-03 17:00:04.974 | INFO     | app.main:66 - GET /.well-known/appspecific/com.chrome.devtools.json 404 2ms
+2026-06-03 17:00:07.808 | INFO     | app.main:66 - GET /api/chat/session/session_e765cll0v_1780410326680 404 1ms
+2026-06-03 17:00:48.436 | INFO     | app.main:66 - POST /api/chat 200 32056ms
+2026-06-03 17:01:04.026 | INFO     | app.main:66 - GET / 200 52ms
+2026-06-03 17:01:04.093 | INFO     | app.main:66 - GET /.well-known/appspecific/com.chrome.devtools.json 404 3ms
+2026-06-03 17:01:04.094 | INFO     | app.main:66 - GET /static/styles.css 200 13ms
+2026-06-03 17:01:04.097 | INFO     | app.main:66 - GET /static/app.js 200 11ms
+2026-06-03 17:01:24.802 | INFO     | app.main:66 - POST /api/chat/stream 200 803ms

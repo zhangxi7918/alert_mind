@@ -13,4 +13,8 @@ def retrieve_knowledge(query: str) -> str:
         logger.warning("知识库检索失败，将返回降级提示：{}", exc)
         return f"知识库检索暂不可用：{type(exc).__name__}: {exc}"
 
-    return "\n".join(document.page_content for document in documents)
+    chunks = []
+    for doc in documents:
+        source = doc.metadata.get("_file_name", "未知来源")
+        chunks.append(f"[来源: {source}]\n{doc.page_content}")
+    return "\n\n".join(chunks)

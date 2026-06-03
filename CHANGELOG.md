@@ -61,6 +61,9 @@
 - feat(agent): 添加 RAG Agent 服务封装（2026-06-01）
   - 新增 `RagAgentService`，组合 `ChatQwen`、`MemorySaver` 和本地知识库工具创建可复用 Agent。
   - 提供非流式 `query()` 与流式 `query_stream()` 方法，并通过 `session_id` 隔离对话历史。
+- feat(tools): retrieve_knowledge 检索结果携带来源元数据（2026-06-03）
+  - 每段检索结果前添加 `[来源: {_file_name}]` 标注，使 LLM 能在回答中引用具体文档名称。
+  - 多段结果之间改用双换行分隔，提升 LLM 对段落边界的识别准确率。
 - feat(models): 添加聊天请求模型（2026-06-01）
   - 新增 `ChatRequest`，统一描述用户问题 `question` 与会话标识 `session_id`。
 - feat(api): 添加 RAG 聊天接口（2026-06-01）
