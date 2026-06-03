@@ -187,6 +187,7 @@
   - 新增 `retrieve_knowledge` LangChain tool，将向量检索结果按换行拼接为字符串。
   - 在 `app.tools` 包入口导出 `DEFAULT_LOCAL_AGENT_TOOLS`，集中维护 Agent 默认本地工具列表。
   - 增加 `langchain` 依赖以支持 `@tool` 装饰器。
+- fix(embedding): embed_documents 按 batch=10 分批调用，修复 DashScope 超出批量限制报错（2026-06-03）
 - feat(rag): 添加检索相关性阈值过滤（2026-06-03）
   - `similarity_search` 增加 `score_threshold` 参数，使用 `similarity_search_with_relevance_scores` 过滤低相关结果。
   - `VectorSearchService` 传入 `rag_score_threshold` 配置，无相关结果时打印 warning 日志。
