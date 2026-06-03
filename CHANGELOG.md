@@ -193,3 +193,9 @@
 - feat(splitter): 添加 Markdown 与纯文本切分服务（2026-05-31）
   - 新增 `DocumentSplitterService`，Markdown 先按 `#`/`##` 标题切分，再按字符数切分，普通文本直接按字符数切分。
   - 对相邻小于 300 字符的碎片进行合并，并为切分结果补充 `_source` 与 `_file_name` 元数据。
+
+- refactor(splitter): 优化 Markdown 切分策略，修复 H3 子章节被合并问题（2026-06-03）
+  - 加入 `###` 到 `MARKDOWN_HEADERS_TO_SPLIT_ON`，Runbook 的每个 H3 子章节（如各排查步骤、原因分析）独立成块，不再语义混合。
+  - Markdown 分支移除 `_merge_small_chunks`：header 切分已提供语义边界，合并反而破坏结构；merge 逻辑保留给纯文本分支。
+  - `_merge_small_chunks` 加合并上限（`<= self.chunk_size`），防止纯文本碎片无限堆叠。
+  - 补齐 `_extension` 元数据字段；加空内容守卫和 try/except + loguru 日志；`chunk_size` 改为实例属性。
