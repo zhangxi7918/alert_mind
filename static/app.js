@@ -1808,7 +1808,7 @@ class SuperBizAgentApp {
         }
 
         const typedInput = this.messageInput ? this.messageInput.value.trim() : '';
-        const aiopsInput = typedInput || '请基于知识库中的智能运维经验，对当前常见告警进行分析并给出排查步骤。';
+        const aiopsInput = typedInput || '请使用 query_active_alerts 查询当前 Prometheus 活跃告警，再使用 query_metric_history 查询过去1小时的 CPU 和内存使用趋势，综合分析服务器健康状态并给出诊断报告。';
 
         // 新建对话
         this.newChat();

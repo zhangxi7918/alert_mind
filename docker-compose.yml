@@ -1,0 +1,26 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: alert_mind_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    restart: unless-stopped
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: alert_mind_node_exporter
+    ports:
+      - "9100:9100"
+    # macOS 下无法直接挂载 /proc /sys，使用容器内默认路径即可
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:

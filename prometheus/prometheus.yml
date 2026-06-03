@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "node_exporter"
+    static_configs:
+      # host.docker.internal 让容器内的 Prometheus 访问到宿主机上的 node_exporter
+      - targets: ["node_exporter:9100"]
