@@ -1,0 +1,29 @@
+{"id":"cpu_001","query":"CPU 使用率持续超过 80% 应该先怎么排查？","expected_sources":["runbook_high_cpu.md"],"category":"cpu"}
+{"id":"cpu_002","query":"HighCPUUsage 告警的 Prometheus 表达式和阈值在哪里定义？","expected_sources":["reference_alert_rules.md"],"category":"alert_rules"}
+{"id":"cpu_003","query":"怎么用 Prometheus 查询最近 5 分钟 CPU 使用率？","expected_sources":["reference_prometheus_metrics.md"],"category":"prometheus"}
+{"id":"memory_001","query":"内存不足告警触发后如何确认 MemAvailable 和整体内存使用情况？","expected_sources":["runbook_high_memory.md","reference_prometheus_metrics.md"],"category":"memory"}
+{"id":"memory_002","query":"OOM Kill 后应该查看哪些日志和容器状态？","expected_sources":["runbook_high_memory.md","runbook_container_restart.md"],"category":"memory"}
+{"id":"disk_001","query":"磁盘空间不足时如何定位大目录和清理 Docker 占用？","expected_sources":["runbook_disk_space.md"],"category":"disk"}
+{"id":"disk_002","query":"DiskSpaceLow 告警为什么要过滤 tmpfs 和 devtmpfs？","expected_sources":["reference_alert_rules.md"],"category":"alert_rules"}
+{"id":"timeout_001","query":"服务 P99 响应时间异常时，应该如何排查上游依赖和慢查询？","expected_sources":["runbook_service_timeout.md"],"category":"service_timeout"}
+{"id":"timeout_002","query":"服务超时同时怀疑数据库连接池耗尽，应该看哪些连接池指标？","expected_sources":["runbook_service_timeout.md","runbook_db_connection_pool.md","reference_prometheus_metrics.md"],"category":"service_timeout"}
+{"id":"network_001","query":"网络延迟和丢包告警触发后，怎么检查网卡错误和 TCP 重传？","expected_sources":["runbook_network_latency.md"],"category":"network"}
+{"id":"network_002","query":"HighNetworkLatency 告警对应的 runbook 是哪个？","expected_sources":["reference_alert_rules.md","runbook_network_latency.md"],"category":"network"}
+{"id":"container_001","query":"容器频繁重启时如何确认退出码和查看上一次日志？","expected_sources":["runbook_container_restart.md"],"category":"container"}
+{"id":"container_002","query":"ContainerRestartLoop 告警为什么 for 配置为 0m？","expected_sources":["reference_alert_rules.md"],"category":"alert_rules"}
+{"id":"db_001","query":"数据库连接池耗尽时如何查看 MySQL 当前连接数和最大连接数？","expected_sources":["runbook_db_connection_pool.md"],"category":"database"}
+{"id":"db_002","query":"CLOSE_WAIT 连接过多通常说明什么问题？","expected_sources":["runbook_db_connection_pool.md"],"category":"database"}
+{"id":"prometheus_001","query":"node_memory_MemAvailable_bytes 应该如何计算可用内存百分比？","expected_sources":["reference_prometheus_metrics.md"],"category":"prometheus"}
+{"id":"prometheus_002","query":"db_connection_pool_checked_out 和 db_connection_pool_size 怎么计算连接池使用率？","expected_sources":["reference_prometheus_metrics.md"],"category":"prometheus"}
+{"id":"alert_001","query":"告警分组 group_wait 和 repeat_interval 分别有什么作用？","expected_sources":["reference_alert_rules.md"],"category":"alert_rules"}
+{"id":"postmortem_001","query":"数据库主从切换引发服务中断事件的根因链是什么？","expected_sources":["postmortem_2024_db_outage.md"],"category":"postmortem"}
+{"id":"postmortem_002","query":"大促活动服务降级事件暴露了哪些容量和降级问题？","expected_sources":["postmortem_2024_black_friday.md"],"category":"postmortem"}
+{"id":"topology_001","query":"AlertMind 本地环境里 Milvus、etcd、MinIO 和 Prometheus 的依赖关系是什么？","expected_sources":["reference_service_topology.md"],"category":"topology"}
+{"id":"jvm_001","query":"JVM Full GC 告警应该如何排查堆内存和 GC 日志？","expected_sources":["runbook_jvm_full_gc.docx"],"category":"jvm"}
+{"id":"kafka_001","query":"Kafka 消费者 lag 持续升高应该怎么处理？","expected_sources":["runbook_kafka_consumer_lag.pdf"],"category":"kafka"}
+{"id":"redis_001","query":"Redis 缓存雪崩时有哪些临时缓解和永久修复措施？","expected_sources":["runbook_redis_cache_avalanche.pdf"],"category":"redis"}
+{"id":"ssl_001","query":"SSL 证书即将过期时应该如何检查和续期？","expected_sources":["runbook_ssl_cert_expiry.docx"],"category":"ssl"}
+{"id":"negative_001","query":"今天上海天气怎么样？","expected_sources":[],"category":"negative"}
+{"id":"negative_002","query":"帮我写一首关于夏天的诗","expected_sources":[],"category":"negative"}
+{"id":"negative_003","query":"Python 里怎么反转一个列表？","expected_sources":[],"category":"negative"}
+{"id":"negative_004","query":"推荐几家附近适合约会的餐厅","expected_sources":[],"category":"negative"}
