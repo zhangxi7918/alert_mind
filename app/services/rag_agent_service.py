@@ -158,8 +158,16 @@ class RagAgentService:
             ],
         }
 
-    def _build_config(self, session_id: str) -> dict[str, dict[str, str]]:
-        return {"configurable": {"thread_id": session_id}}
+    def _build_config(self, session_id: str) -> dict[str, object]:
+        return {
+            "configurable": {"thread_id": session_id},
+            "run_name": "rag_chat",
+            "tags": ["alert-mind", "rag"],
+            "metadata": {
+                "session_id": session_id,
+                "entrypoint": "chat",
+            },
+        }
 
     def _get_model(self) -> ChatQwen:
         if self.model is None:
