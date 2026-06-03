@@ -1,3 +1,11 @@
+## Logger 文件配置
+
+- feat(main): 新增 HTTP 请求日志中间件，自动记录方法、路径、状态码、耗时（2026-06-03）
+- feat(logger): 新增 `app/utils/logger.py`，统一配置 loguru 文件输出（2026-06-03）
+  - 按天轮转（`rotation="00:00"`），保留 7 天（`retention="7 days"`）
+  - 文件级别 DEBUG，控制台级别 INFO，均使用统一格式；`main.py` 在模块加载时调用 `setup_logger()`
+  - 日志写入 `logs/alert_mind_YYYY-MM-DD.log`
+
 ## 项目目录结构
 
 - chore(app): 初始化应用包目录结构（2026-05-30）

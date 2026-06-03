@@ -1,13 +1,15 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 import os
+import time
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
+from app.utils.logger import setup_logger
 from app.api import aiops
 from app.api import chat
 from app.api import file
@@ -28,6 +30,9 @@ class NoCacheStaticFiles(StaticFiles):
         response.headers.update(NO_CACHE_HEADERS)
 
         return response
+
+
+setup_logger()
 
 
 @asynccontextmanager
@@ -51,6 +56,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.time()
+    response = await call_next(request)
+    duration_ms = (time.time() - start) * 1000
+    logger.info(
+        "{} {} {} {:.0f}ms",
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration_ms,
+    )
+    return response
 
 app.include_router(health.router)
 app.include_router(chat.router, prefix="/api", tags=["智能问答"])
