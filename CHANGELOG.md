@@ -1,3 +1,10 @@
+## RAG 评测
+
+- feat(rag-eval): 添加 source-level 检索评测脚本与 golden dataset（2026-06-04）
+  - 新增 `eval/rag_golden.jsonl`，覆盖 Runbook、Prometheus 指标、告警规则、故障复盘和 negative case。
+  - 新增离线评测脚本，按当前 RAG 配置输出 `accuracy@k(hit@k)`、召回率、精确率和 negative pass rate。
+  - 提取纯函数评测逻辑并补充单元测试，避免单测依赖 Milvus 或 DashScope。
+
 ## 可观测性
 
 - feat(observability): 接入 LangSmith trace 配置（2026-06-04）
