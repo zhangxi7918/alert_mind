@@ -6,6 +6,7 @@ class ChatRequest(BaseModel):
 
     question: str = Field(description="用户问题")
     session_id: str = Field(description="会话 ID")
+    run_id: str | None = Field(default=None, description="可恢复流式运行 ID")
 
 
 class AiopsRequest(BaseModel):

@@ -70,6 +70,25 @@
   - 流式生成中发送按钮切换为停止按钮，点击后通过 `AbortController` 断开当前回答请求。
   - 已生成的半截回答保留在界面和本地历史中，并标记为“已停止生成”。
   - 后端 SSE 流在客户端断开时停止产出，并显式关闭上游 Agent async stream。
+- feat(static): 支持 RAG 流式回答刷新后续接（2026-06-04）
+  - 前端保存进行中的 `run_id`、`session_id` 和事件偏移，页面刷新后自动恢复订阅。
+  - 停止按钮改为先调用后端取消接口，再断开当前请求，区分刷新重连与用户主动停止。
+  - 流式回答完成或停止后同步本地历史，避免刷新恢复残留旧运行状态。
+- fix(static): 避免 RAG 流式回答二次刷新后出现空白回答（2026-06-04）
+  - 恢复订阅前先从 Redis 事件日志读取运行快照，重新拼出半截回答和最新事件偏移。
+  - 后续续订以 Redis 快照的 `last_event_id` 为准，避免依赖浏览器本地缓存中的半截内容。
+- fix(static): 刷新中断 RAG SSE 时保留本地运行状态（2026-06-04）
+  - 非用户主动停止导致的 `AbortError` 不再清理 `activeChatRun`，让新页面继续恢复。
+  - HTTP 连接结束不再被当作回答完成，只有收到 `complete/cancelled/error` 终态事件才清理运行状态。
+- fix(static): RAG 流式回答完成后刷新仍恢复当前会话（2026-06-04）
+  - 前端记录 `lastOpenChatId`，当 `activeChatRun` 已完成并清理后，页面刷新会自动打开最近会话。
+  - 新建和删除会话时同步清理当前会话指针，避免误恢复旧对话。
+- fix(static): 用后端运行引用兜底 RAG 刷新恢复（2026-06-04）
+  - 前端额外保存 `lastActiveRunRef`，仅包含 `runId/sessionId/question/lastEventId`，不保存回答内容。
+  - 即使 `activeChatRun` 被清理，刷新后也会基于运行引用请求后端 snapshot，从 Redis 事件日志重建消息。
+- refactor(static): RAG 刷新恢复只持久化后端运行引用（2026-06-04）
+  - `activeChatRun` 改为页面内存态，不再写入 LocalStorage，避免前端半截回答成为恢复来源。
+  - LocalStorage 只保留 `lastActiveRunRef` 作为 Redis 事件日志书签。
 - feat(static): 文件上传放开 PDF 与 Word(.docx) 类型（2026-06-03）
   - `fileInput` 的 accept 增加 `.pdf,.docx`，前端 `allowedExtensions` 与提示文案同步更新，与后端支持的格式对齐。
 - feat(static): 对接会话历史读取与清空接口（2026-06-03）
@@ -106,6 +125,13 @@
   - 新增 `GET /api/session/{session_id}/history` 读取会话历史，过滤系统提示与纯工具调用消息，仅返回 user/assistant 文本。
   - 新增 `DELETE /api/session/{session_id}` 清空会话，委托 `MemorySaver.adelete_thread`，无历史时调用同样安全。
   - `RagAgentService` 增加 `get_history()` 与 `clear_session()`，并新增 `SessionHistoryResponse`、`ClearSessionResponse` 响应模型。
+- feat(chat): 添加 RAG 可恢复流式运行管理（2026-06-04）
+  - 新增 Redis 事件日志和运行元数据，浏览器断连后后台任务继续生成并支持按 `event_id` 回放。
+  - `POST /api/chat/stream` 支持 `run_id`，新增续订接口与取消接口，SSE 事件统一携带 `run_id` 和 `event_id`。
+  - 补充单元测试覆盖断连后继续生成、偏移回放、取消、终态 TTL 和孤儿运行失败提示。
+- fix(chat): 为 RAG 可恢复流新增运行快照接口（2026-06-04）
+  - `GET /api/chat/runs/{run_id}/snapshot` 从 Redis 事件日志重建当前半截回答，供刷新恢复前校准前端状态。
+  - 快照读取会识别进程重启后的孤儿运行并返回失败状态，避免前端一直等待不存在的后台任务。
 - fix(agent): 显式配置 DashScope 国内兼容模式地址（2026-06-01）
   - 为 `ChatQwen` 设置 `base_url`，避免默认请求国际站导致国内 DashScope API Key 认证失败。
 - feat(agent): 添加 AIOps 执行状态类型定义（2026-06-01）
