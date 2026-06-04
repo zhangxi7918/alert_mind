@@ -16,6 +16,7 @@ from app.api import file
 from app.api import health
 from app.config import config
 from app.services.rag_agent_service import rag_agent_service
+from app.services.rag_stream_run_service import rag_stream_run_service
 from app.services.vector_store_manager import vector_store_manager
 
 NO_CACHE_HEADERS = {
@@ -40,11 +41,13 @@ setup_logger()
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     logger.info("服务启动中...")
     await rag_agent_service.initialize_checkpointer()
+    await rag_stream_run_service.initialize()
     try:
         vector_store_manager.initialize()
         yield
     finally:
         vector_store_manager.close()
+        await rag_stream_run_service.close()
         await rag_agent_service.close()
 
 

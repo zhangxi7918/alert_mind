@@ -7,6 +7,7 @@ class SuperBizAgentApp {
         this.isStreaming = false;
         this.streamAbortController = null;
         this.streamStopRequested = false;
+        this.activeChatRun = null;
         this.currentChatHistory = []; // 当前对话的消息历史
         this.chatHistories = this.loadChatHistories(); // 所有历史对话
         this.isCurrentChatFromHistory = false; // 标记当前对话是否是从历史记录加载的
@@ -17,6 +18,7 @@ class SuperBizAgentApp {
         this.initMarkdown();
         this.checkAndSetCentered();
         this.renderChatHistory();
+        this.restoreInitialChatState();
     }
 
     resolveApiBaseUrl() {
@@ -248,6 +250,8 @@ class SuperBizAgentApp {
             this.showNotification('请等待当前对话完成后再新建对话', 'warning');
             return;
         }
+        this.clearActiveChatRun();
+        this.clearLastActiveRunRef();
         
         // 如果当前有对话内容，且不是从历史记录加载的，才保存为新的历史对话
         // 如果是从历史记录加载的，只需要更新该历史记录
@@ -271,6 +275,8 @@ class SuperBizAgentApp {
         
         // 清空当前对话历史
         this.currentChatHistory = [];
+        this.clearLastOpenChatId();
+        this.clearLastActiveRunRef();
         
         // 重置标记
         this.isCurrentChatFromHistory = false;
@@ -337,6 +343,7 @@ class SuperBizAgentApp {
         
         // 保存到localStorage
         this.saveChatHistories();
+        this.saveLastOpenChatId(chatHistory.id);
     }
     
     // 更新当前对话的历史记录
@@ -368,6 +375,7 @@ class SuperBizAgentApp {
         
         // 保存到localStorage
         this.saveChatHistories();
+        this.saveLastOpenChatId(history.id);
     }
     
     // 加载历史对话列表
@@ -438,10 +446,16 @@ class SuperBizAgentApp {
     
     // 加载历史对话
     async loadChatHistory(historyId) {
+        if (this.isStreaming) {
+            this.showNotification('请等待当前对话完成后再切换历史', 'warning');
+            return;
+        }
+
         const history = this.chatHistories.find(h => h.id === historyId);
         if (!history) {
             return;
         }
+        this.clearActiveChatRun();
         
         // 如果当前有对话内容，且不是同一个对话，先保存
         if (this.currentChatHistory.length > 0 && this.sessionId !== historyId) {
@@ -464,6 +478,7 @@ class SuperBizAgentApp {
                 // 更新会话ID
                 this.sessionId = history.id;
                 this.isCurrentChatFromHistory = true;
+                this.saveLastOpenChatId(history.id);
                 
                 // 清空并重新渲染消息
                 if (this.chatMessages) {
@@ -493,6 +508,7 @@ class SuperBizAgentApp {
                 this.sessionId = history.id;
                 this.currentChatHistory = [...history.messages];
                 this.isCurrentChatFromHistory = true;
+                this.saveLastOpenChatId(history.id);
                 
                 if (this.chatMessages) {
                     this.chatMessages.innerHTML = '';
@@ -507,6 +523,7 @@ class SuperBizAgentApp {
             this.sessionId = history.id;
             this.currentChatHistory = [...history.messages];
             this.isCurrentChatFromHistory = true;
+            this.saveLastOpenChatId(history.id);
             
             if (this.chatMessages) {
                 this.chatMessages.innerHTML = '';
@@ -523,7 +540,17 @@ class SuperBizAgentApp {
     
     // 删除历史对话
     async deleteChatHistory(historyId) {
+        if (this.isStreaming) {
+            this.showNotification('请等待当前对话完成后再删除会话', 'warning');
+            return;
+        }
+
         try {
+            if (this.activeChatRun && this.activeChatRun.sessionId === historyId) {
+                this.clearActiveChatRun();
+                this.clearLastActiveRunRef();
+            }
+
             // 调用后端API清空会话
             const response = await fetch(`/api/session/${historyId}`, {
                 method: 'DELETE',
@@ -539,6 +566,8 @@ class SuperBizAgentApp {
                 // 从本地存储中删除
                 this.chatHistories = this.chatHistories.filter(h => h.id !== historyId);
                 this.saveChatHistories();
+                this.clearLastOpenChatId(historyId);
+                this.clearLastActiveRunRef();
                 this.renderChatHistory();
                 
                 // 如果删除的是当前对话，清空当前对话
@@ -643,13 +672,24 @@ class SuperBizAgentApp {
             !this.streamStopRequested;
     }
 
-    stopCurrentStream() {
+    async stopCurrentStream() {
         if (!this.canStopCurrentStream()) {
             return;
         }
 
         this.streamStopRequested = true;
         this.updateUI();
+
+        if (this.activeChatRun && this.activeChatRun.runId) {
+            try {
+                await fetch(`${this.apiBaseUrl}/chat/runs/${this.activeChatRun.runId}/cancel`, {
+                    method: 'POST',
+                });
+            } catch (error) {
+                console.error('取消流式回答失败:', error);
+            }
+        }
+
         this.streamAbortController.abort();
     }
 
@@ -672,6 +712,96 @@ class SuperBizAgentApp {
     // 生成随机会话ID
     generateSessionId() {
         return 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    }
+
+    generateRunId() {
+        return 'run_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    }
+
+    saveActiveChatRun() {
+        if (!this.activeChatRun) {
+            return;
+        }
+
+        this.saveLastActiveRunRef(this.activeChatRun);
+    }
+
+    clearActiveChatRun() {
+        this.activeChatRun = null;
+        // 兼容清理旧版本曾写入的重对象；后续只保留 lastActiveRunRef。
+        try {
+            localStorage.removeItem('activeChatRun');
+        } catch (error) {
+            console.error('清理流式运行状态失败:', error);
+        }
+    }
+
+    saveLastActiveRunRef(run) {
+        if (!run || !run.runId || !run.sessionId) {
+            return;
+        }
+
+        try {
+            localStorage.setItem('lastActiveRunRef', JSON.stringify({
+                runId: run.runId,
+                sessionId: run.sessionId,
+                question: run.question || '',
+                lastEventId: Number(run.lastEventId || 0),
+                updatedAt: new Date().toISOString()
+            }));
+        } catch (error) {
+            console.error('保存最近流式运行引用失败:', error);
+        }
+    }
+
+    loadLastActiveRunRef() {
+        try {
+            const stored = localStorage.getItem('lastActiveRunRef');
+            return stored ? JSON.parse(stored) : null;
+        } catch (error) {
+            console.error('读取最近流式运行引用失败:', error);
+            return null;
+        }
+    }
+
+    clearLastActiveRunRef() {
+        try {
+            localStorage.removeItem('lastActiveRunRef');
+        } catch (error) {
+            console.error('清理最近流式运行引用失败:', error);
+        }
+    }
+
+    saveLastOpenChatId(chatId = this.sessionId) {
+        if (!chatId) {
+            return;
+        }
+
+        try {
+            localStorage.setItem('lastOpenChatId', chatId);
+        } catch (error) {
+            console.error('保存当前会话指针失败:', error);
+        }
+    }
+
+    loadLastOpenChatId() {
+        try {
+            return localStorage.getItem('lastOpenChatId');
+        } catch (error) {
+            console.error('读取当前会话指针失败:', error);
+            return null;
+        }
+    }
+
+    clearLastOpenChatId(chatId = null) {
+        try {
+            const currentChatId = localStorage.getItem('lastOpenChatId');
+            if (!chatId || currentChatId === chatId) {
+                localStorage.removeItem('lastOpenChatId');
+            }
+        } catch (error) {
+            console.error('清理当前会话指针失败:', error);
+        }
     }
 
     // 发送消息
@@ -766,13 +896,25 @@ class SuperBizAgentApp {
 
     // 发送流式消息
     async sendStreamMessage(message) {
+        const runId = this.generateRunId();
         this.streamAbortController = new AbortController();
         this.streamStopRequested = false;
         this.updateUI();
 
-        let assistantMessageElement = null;
-        let fullResponse = '';
+        this.activeChatRun = {
+            runId,
+            sessionId: this.sessionId,
+            question: message,
+            lastEventId: 0,
+            assistantContent: '',
+            messages: [...this.currentChatHistory],
+            status: 'running',
+            updatedAt: new Date().toISOString()
+        };
+        this.saveActiveChatRun();
+        this.saveLastOpenChatId(this.sessionId);
 
+        const assistantMessageElement = this.addMessage('assistant', '', true);
         try {
             const response = await fetch(`${this.apiBaseUrl}/chat/stream`, {
                 method: 'POST',
@@ -782,136 +924,24 @@ class SuperBizAgentApp {
                 signal: this.streamAbortController.signal,
                 body: JSON.stringify({
                     session_id: this.sessionId,
-                    question: message
+                    question: message,
+                    run_id: runId
                 })
             });
 
             if (!response.ok) {
                 throw new Error(`HTTP错误: ${response.status}`);
             }
-            
-            // 创建助手消息元素
-            assistantMessageElement = this.addMessage('assistant', '', true);
 
-            // 处理流式响应
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-            let currentEvent = '';
-
-            try {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    
-                    if (done) {
-                        // 流结束，使用统一的处理方法
-                        this.handleStreamComplete(assistantMessageElement, fullResponse);
-                        break;
-                    }
-
-                    // 解码数据并添加到缓冲区
-                    buffer += decoder.decode(value, { stream: true });
-                    
-                    // 按行分割处理
-                    const lines = buffer.split('\n');
-                    // 保留最后一行（可能不完整）
-                    buffer = lines.pop() || '';
-                    
-                    for (const line of lines) {
-                        if (line.trim() === '') continue;
-                        
-                        console.log('[SSE调试] 收到行:', line);
-                        
-                        // 解析SSE格式
-                        if (line.startsWith('id:')) {
-                            console.log('[SSE调试] 解析到ID');
-                            continue;
-                        } else if (line.startsWith('event:')) {
-                            // 兼容 "event:message" 和 "event: message" 两种格式
-                            currentEvent = line.substring(6).trim();
-                            console.log('[SSE调试] 解析到事件类型:', currentEvent);
-                            // 注意：后端统一使用 "message" 事件名，真正的类型在 data 的 JSON 中
-                            continue;
-                        } else if (line.startsWith('data:')) {
-                            // 兼容 "data:xxx" 和 "data: xxx" 两种格式
-                            const rawData = line.substring(5).trim();
-                            console.log('[SSE调试] 解析到数据, currentEvent:', currentEvent, ', rawData:', rawData);
-                            
-                            // 兼容旧格式 [DONE] 标记
-                            if (rawData === '[DONE]') {
-                                // 流结束标记，将内容转换为Markdown渲染
-                                this.handleStreamComplete(assistantMessageElement, fullResponse);
-                                return;
-                            }
-                            
-                            // 处理 SSE 数据
-                            try {
-                                // 尝试解析为 SseMessage 格式的 JSON
-                                const sseMessage = JSON.parse(rawData);
-                                console.log('[SSE调试] 解析JSON成功:', sseMessage);
-                                
-                                if (sseMessage && typeof sseMessage.type === 'string') {
-                                    if (sseMessage.type === 'content') {
-                                        const content = sseMessage.data || '';
-                                        fullResponse += content;
-                                        console.log('[SSE调试] 添加内容:', content);
-                                        
-                                        // 实时渲染 Markdown
-                                        if (assistantMessageElement) {
-                                            const messageContent = assistantMessageElement.querySelector('.message-content');
-                                            messageContent.innerHTML = this.renderMarkdown(fullResponse);
-                                            // 高亮代码块
-                                            this.highlightCodeBlocks(messageContent);
-                                            this.scrollToBottom();
-                                        }
-                                    } else if (sseMessage.type === 'done' || sseMessage.type === 'complete') {
-                                        console.log('[SSE调试] 收到done标记，流结束');
-                                        this.handleStreamComplete(assistantMessageElement, fullResponse);
-                                        return;
-                                    } else if (sseMessage.type === 'error') {
-                                        console.error('[SSE调试] 收到错误:', sseMessage.data);
-                                        if (assistantMessageElement) {
-                                            const messageContent = assistantMessageElement.querySelector('.message-content');
-                                            messageContent.innerHTML = this.renderMarkdown('错误: ' + (sseMessage.data || '未知错误'));
-                                        }
-                                        return;
-                                    }
-                                } else {
-                                    // 不是标准 SseMessage 格式，尝试兼容处理
-                                    console.log('[SSE调试] 非标准格式，尝试兼容处理');
-                                    fullResponse += rawData;
-                                    if (assistantMessageElement) {
-                                        const messageContent = assistantMessageElement.querySelector('.message-content');
-                                        messageContent.innerHTML = this.renderMarkdown(fullResponse);
-                                        this.highlightCodeBlocks(messageContent);
-                                        this.scrollToBottom();
-                                    }
-                                }
-                            } catch (e) {
-                                // JSON 解析失败，尝试兼容旧格式
-                                console.log('[SSE调试] JSON解析失败，使用兼容模式:', e.message);
-                                if (rawData === '') {
-                                    fullResponse += '\n';
-                                } else {
-                                    fullResponse += rawData;
-                                }
-                                
-                                if (assistantMessageElement) {
-                                    const messageContent = assistantMessageElement.querySelector('.message-content');
-                                    messageContent.innerHTML = this.renderMarkdown(fullResponse);
-                                    this.highlightCodeBlocks(messageContent);
-                                    this.scrollToBottom();
-                                }
-                            }
-                        }
-                    }
-                }
-            } finally {
-                reader.releaseLock();
-            }
+            await this.consumeChatStreamResponse(response, assistantMessageElement);
         } catch (error) {
             if (error.name === 'AbortError' && this.streamStopRequested) {
-                this.handleStreamStopped(assistantMessageElement, fullResponse);
+                this.handleStreamStopped(
+                    assistantMessageElement,
+                    this.activeChatRun ? this.activeChatRun.assistantContent : ''
+                );
+                this.clearActiveChatRun();
+                this.clearLastActiveRunRef();
                 return;
             }
 
@@ -921,6 +951,325 @@ class SuperBizAgentApp {
             this.streamStopRequested = false;
             this.updateUI();
         }
+    }
+
+    async restoreActiveChatRun() {
+        if (!this.activeChatRun || this.activeChatRun.status !== 'running') {
+            return;
+        }
+
+        this.sessionId = this.activeChatRun.sessionId;
+        this.currentMode = 'stream';
+        this.currentChatHistory = [...(this.activeChatRun.messages || [])];
+
+        if (this.chatMessages) {
+            this.chatMessages.innerHTML = '';
+            this.currentChatHistory.forEach(msg => {
+                this.addMessage(msg.type, msg.content, false, false);
+            });
+        }
+
+        const assistantMessageElement = this.addMessage(
+            'assistant',
+            this.activeChatRun.assistantContent || '',
+            true,
+            false
+        );
+        const messageContent = assistantMessageElement.querySelector('.message-content');
+        if (messageContent) {
+            messageContent.innerHTML = this.renderMarkdown(this.activeChatRun.assistantContent || '');
+            this.highlightCodeBlocks(messageContent);
+        }
+
+        this.isStreaming = true;
+        this.streamAbortController = new AbortController();
+        this.streamStopRequested = false;
+        this.updateUI();
+        this.checkAndSetCentered();
+
+        try {
+            const terminalHandled = await this.refreshActiveChatRunSnapshot(assistantMessageElement);
+            if (terminalHandled) {
+                return;
+            }
+
+            const fromEventId = Number(this.activeChatRun.lastEventId || 0);
+            const response = await fetch(
+                `${this.apiBaseUrl}/chat/runs/${this.activeChatRun.runId}/stream?from_event_id=${fromEventId}`,
+                { signal: this.streamAbortController.signal }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP错误: ${response.status}`);
+            }
+
+            await this.consumeChatStreamResponse(response, assistantMessageElement);
+        } catch (error) {
+            if (error.name === 'AbortError' && this.streamStopRequested) {
+                this.handleStreamStopped(
+                    assistantMessageElement,
+                    this.activeChatRun ? this.activeChatRun.assistantContent : ''
+                );
+                this.clearActiveChatRun();
+            } else if (error.name === 'AbortError') {
+                // 浏览器刷新/关闭页面也会中断 fetch，这种情况要保留 activeChatRun 给新页面恢复。
+                return;
+            } else {
+                console.error('恢复流式回答失败:', error);
+                const content = this.activeChatRun ? this.activeChatRun.assistantContent : '';
+                const messageContent = assistantMessageElement.querySelector('.message-content');
+                if (messageContent) {
+                    messageContent.innerHTML = this.renderMarkdown(
+                        `${content}\n\n错误: 恢复流式回答失败：${error.message}`
+                    );
+                    this.highlightCodeBlocks(messageContent);
+                }
+                this.clearActiveChatRun();
+            }
+        } finally {
+            this.isStreaming = false;
+            this.streamAbortController = null;
+            this.streamStopRequested = false;
+            this.updateUI();
+        }
+    }
+
+    async restoreInitialChatState() {
+        if (this.activeChatRun && this.activeChatRun.status === 'running') {
+            await this.restoreActiveChatRun();
+            return;
+        }
+
+        const lastRunRef = this.loadLastActiveRunRef();
+        if (lastRunRef && lastRunRef.runId && lastRunRef.sessionId) {
+            this.activeChatRun = {
+                runId: lastRunRef.runId,
+                sessionId: lastRunRef.sessionId,
+                question: lastRunRef.question || '',
+                lastEventId: Number(lastRunRef.lastEventId || 0),
+                assistantContent: '',
+                messages: lastRunRef.question ? [{
+                    type: 'user',
+                    content: lastRunRef.question,
+                    timestamp: new Date().toISOString()
+                }] : [],
+                status: 'running',
+                updatedAt: new Date().toISOString()
+            };
+            await this.restoreActiveChatRun();
+            return;
+        }
+
+        const lastOpenChatId = this.loadLastOpenChatId();
+        if (!lastOpenChatId) {
+            return;
+        }
+
+        const history = this.chatHistories.find(item => item.id === lastOpenChatId);
+        if (!history) {
+            this.clearLastOpenChatId(lastOpenChatId);
+            return;
+        }
+
+        await this.loadChatHistory(lastOpenChatId);
+    }
+
+    async refreshActiveChatRunSnapshot(assistantMessageElement) {
+        if (!this.activeChatRun || !this.activeChatRun.runId) {
+            return true;
+        }
+
+        const response = await fetch(`${this.apiBaseUrl}/chat/runs/${this.activeChatRun.runId}/snapshot`);
+        if (!response.ok) {
+            throw new Error(`恢复快照失败: ${response.status}`);
+        }
+
+        const snapshot = await response.json();
+        this.activeChatRun.sessionId = snapshot.session_id || this.activeChatRun.sessionId;
+        this.activeChatRun.question = snapshot.question || this.activeChatRun.question;
+        this.activeChatRun.lastEventId = Number(snapshot.last_event_id || 0);
+        this.activeChatRun.assistantContent = snapshot.assistant_content || '';
+        this.activeChatRun.status = snapshot.status || 'failed';
+        this.activeChatRun.updatedAt = new Date().toISOString();
+        this.activeChatRun.messages = this.activeChatRun.question ? [{
+            type: 'user',
+            content: this.activeChatRun.question,
+            timestamp: new Date().toISOString()
+        }] : [];
+        this.saveActiveChatRun();
+        this.renderStreamingAssistantContent(assistantMessageElement, this.activeChatRun.assistantContent);
+
+        if (this.activeChatRun.status === 'completed') {
+            this.handleStreamComplete(assistantMessageElement, this.activeChatRun.assistantContent);
+            this.clearActiveChatRun();
+            return true;
+        }
+
+        if (this.activeChatRun.status === 'cancelled') {
+            this.handleStreamStopped(assistantMessageElement, this.activeChatRun.assistantContent);
+            this.clearActiveChatRun();
+            return true;
+        }
+
+        if (this.activeChatRun.status === 'failed') {
+            this.renderStreamingAssistantContent(
+                assistantMessageElement,
+                `${this.activeChatRun.assistantContent}\n\n错误: 当前回答无法继续恢复，请重新发送问题。`
+            );
+            this.clearActiveChatRun();
+            return true;
+        }
+
+        return false;
+    }
+
+    async consumeChatStreamResponse(response, assistantMessageElement) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+
+                if (done) {
+                    buffer += decoder.decode();
+                    if (buffer.trim()) {
+                        const shouldStop = this.processChatEventBlock(buffer, assistantMessageElement);
+                        if (shouldStop) {
+                            return;
+                        }
+                    }
+
+                    // HTTP 连接结束不等于后台生成完成；刷新/网络断开时要保留 activeChatRun。
+                    return;
+                }
+
+                buffer += decoder.decode(value, { stream: true });
+                const eventBlocks = buffer.split(/\r?\n\r?\n/);
+                buffer = eventBlocks.pop() || '';
+
+                for (const block of eventBlocks) {
+                    if (this.processChatEventBlock(block, assistantMessageElement)) {
+                        return;
+                    }
+                }
+            }
+        } finally {
+            reader.releaseLock();
+        }
+    }
+
+    processChatEventBlock(block, assistantMessageElement) {
+        const dataLines = [];
+        for (const line of block.split(/\r?\n/)) {
+            if (line.startsWith('data:')) {
+                dataLines.push(line.substring(5).trimStart());
+            }
+        }
+
+        if (dataLines.length === 0) {
+            return false;
+        }
+
+        const rawData = dataLines.join('\n').trim();
+        if (!rawData) {
+            return false;
+        }
+
+        if (rawData === '[DONE]') {
+            this.handleStreamComplete(
+                assistantMessageElement,
+                this.activeChatRun ? this.activeChatRun.assistantContent : ''
+            );
+            this.clearActiveChatRun();
+            return true;
+        }
+
+        try {
+            return this.handleChatStreamEvent(JSON.parse(rawData), assistantMessageElement);
+        } catch (error) {
+            if (!this.activeChatRun) {
+                return false;
+            }
+
+                this.activeChatRun.assistantContent += rawData;
+                this.activeChatRun.updatedAt = new Date().toISOString();
+                this.saveActiveChatRun();
+                this.renderStreamingAssistantContent(assistantMessageElement, this.activeChatRun.assistantContent);
+            return false;
+        }
+    }
+
+    handleChatStreamEvent(event, assistantMessageElement) {
+        if (!event || typeof event.type !== 'string') {
+            return false;
+        }
+
+        if (this.activeChatRun && Number.isInteger(event.event_id)) {
+            this.activeChatRun.lastEventId = event.event_id;
+            this.activeChatRun.updatedAt = new Date().toISOString();
+        }
+
+        if (event.type === 'run_started') {
+            this.saveActiveChatRun();
+            return false;
+        }
+
+        if (event.type === 'content') {
+            const content = event.data || '';
+            if (this.activeChatRun) {
+                this.activeChatRun.assistantContent += content;
+                this.saveActiveChatRun();
+                this.renderStreamingAssistantContent(assistantMessageElement, this.activeChatRun.assistantContent);
+            }
+            return false;
+        }
+
+        if (event.type === 'complete' || event.type === 'done') {
+            const content = this.activeChatRun ? this.activeChatRun.assistantContent : '';
+            this.handleStreamComplete(assistantMessageElement, content);
+            this.clearActiveChatRun();
+            return true;
+        }
+
+        if (event.type === 'cancelled') {
+            const content = this.activeChatRun ? this.activeChatRun.assistantContent : '';
+            this.handleStreamStopped(assistantMessageElement, content);
+            this.clearActiveChatRun();
+            this.clearLastActiveRunRef();
+            return true;
+        }
+
+        if (event.type === 'error') {
+            const errorMessage = event.data || event.message || '未知错误';
+            const content = this.activeChatRun ? this.activeChatRun.assistantContent : '';
+            this.renderStreamingAssistantContent(
+                assistantMessageElement,
+                `${content}\n\n错误: ${errorMessage}`
+            );
+            this.clearActiveChatRun();
+            this.clearLastActiveRunRef();
+            return true;
+        }
+
+        this.saveActiveChatRun();
+        return false;
+    }
+
+    renderStreamingAssistantContent(assistantMessageElement, content) {
+        if (!assistantMessageElement) {
+            return;
+        }
+
+        const messageContent = assistantMessageElement.querySelector('.message-content');
+        if (!messageContent) {
+            return;
+        }
+
+        messageContent.innerHTML = this.renderMarkdown(content);
+        this.highlightCodeBlocks(messageContent);
+        this.scrollToBottom();
     }
 
     // 添加消息到聊天界面
@@ -1085,8 +1434,10 @@ class SuperBizAgentApp {
             // 如果当前对话是从历史记录加载的，更新历史记录
             if (this.isCurrentChatFromHistory) {
                 this.updateCurrentChatHistory();
-                this.renderChatHistory();
+            } else {
+                this.saveCurrentChat();
             }
+            this.renderChatHistory();
         }
     }
 
@@ -1100,6 +1451,7 @@ class SuperBizAgentApp {
 
         if (!fullResponse) {
             assistantMessageElement.remove();
+            this.clearLastActiveRunRef();
             return;
         }
 
@@ -1120,8 +1472,11 @@ class SuperBizAgentApp {
 
         if (this.isCurrentChatFromHistory) {
             this.updateCurrentChatHistory();
-            this.renderChatHistory();
+        } else {
+            this.saveCurrentChat();
         }
+        this.renderChatHistory();
+        this.clearLastActiveRunRef();
     }
 
     // 显示通知
