@@ -14,14 +14,22 @@ from app.services.rag_agent_service import rag_agent_service
 
 RunStatus = Literal["running", "completed", "failed", "cancelled"]
 INITIAL_STREAM_ID = "0-0"
+ORPHANED_RUN_ERROR = "服务已重启或运行超时，当前回答无法继续生成，请重新发送问题。"
+STREAM_META_PATTERN = "rag:stream:*:meta"
 
 
 class RagStreamRunService:
     """管理可恢复的 RAG 流式回答运行状态。"""
 
-    def __init__(self, redis_url: str, terminal_ttl_seconds: int = 86400) -> None:
+    def __init__(
+        self,
+        redis_url: str,
+        terminal_ttl_seconds: int = 86400,
+        running_timeout_seconds: int = 7200,
+    ) -> None:
         self.redis_url = redis_url
         self.terminal_ttl_seconds = terminal_ttl_seconds
+        self.running_timeout_seconds = running_timeout_seconds
         self.redis: Redis | None = None
         self._tasks: dict[str, asyncio.Task[None]] = {}
 
@@ -31,6 +39,23 @@ class RagStreamRunService:
 
         self.redis = Redis.from_url(self.redis_url, decode_responses=True)
         await self.redis.ping()
+        await self.cleanup_running_runs()
+
+    async def cleanup_running_runs(self) -> None:
+        """清理 Redis 中无法由当前进程继续恢复的 running stream run。"""
+        if self.redis is None:
+            return
+
+        async for meta_key in self.redis.scan_iter(match=STREAM_META_PATTERN):
+            meta = await self.redis.hgetall(meta_key)
+            if meta.get("status") != "running":
+                continue
+
+            run_id = meta.get("run_id") or self._run_id_from_meta_key(str(meta_key))
+            if not run_id:
+                continue
+
+            await self._fail_orphaned_run(str(run_id), meta)
 
     async def close(self) -> None:
         for task in self._tasks.values():
@@ -242,6 +267,7 @@ class RagStreamRunService:
     ) -> dict[str, Any]:
         payload = {"run_id": run_id, **event}
         encoded = json.dumps(payload, ensure_ascii=False)
+        await self._ensure_stream_events_key(run_id)
         event_id = await self.redis.xadd(self._events_key(run_id), {"payload": encoded})
         payload["event_id"] = str(event_id)
         mapping: dict[str, str] = {"updated_at": self._now()}
@@ -250,7 +276,7 @@ class RagStreamRunService:
             mapping["status"] = status
         await self.redis.hset(self._meta_key(run_id), mapping=mapping)
 
-        if status in {"completed", "failed", "cancelled"}:
+        if status in {"completed", "failed", "cancelled"} and self.terminal_ttl_seconds > 0:
             await self.redis.expire(self._meta_key(run_id), self.terminal_ttl_seconds)
             await self.redis.expire(self._events_key(run_id), self.terminal_ttl_seconds)
 
@@ -267,17 +293,36 @@ class RagStreamRunService:
             if self._stream_id_after(str(event["event_id"]), from_event_id):
                 yield event
 
-    async def _fail_orphaned_run(self, run_id: str) -> None:
-        status = await self._get_status(run_id)
-        if status == "running" and run_id not in self._tasks:
-            await self._append_event(
-                run_id,
-                {
-                    "type": "error",
-                    "data": "服务已重启，当前回答无法继续生成，请重新发送问题。",
-                },
-                status="failed",
-            )
+    async def _fail_orphaned_run(
+        self,
+        run_id: str,
+        meta: dict[str, str] | None = None,
+    ) -> None:
+        status = meta.get("status") if meta is not None else await self._get_status(run_id)
+        if status != "running":
+            return
+
+        task = self._tasks.get(run_id)
+        if task is not None and meta is None:
+            meta = await self.redis.hgetall(self._meta_key(run_id))
+
+        if task is not None and not self._is_running_timeout(meta):
+            return
+
+        task = self._tasks.pop(run_id, None)
+        if task is not None:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+        await self._append_event(
+            run_id,
+            {
+                "type": "error",
+                "data": ORPHANED_RUN_ERROR,
+            },
+            status="failed",
+        )
 
     async def _get_status(self, run_id: str) -> str | None:
         return await self.redis.hget(self._meta_key(run_id), "status")
@@ -309,7 +354,52 @@ class RagStreamRunService:
         return f"rag:stream:{run_id}:events"
 
     def _now(self) -> str:
-        return str(time.time())
+        return str(self._now_seconds())
+
+    def _now_seconds(self) -> float:
+        return time.time()
+
+    def _is_running_timeout(self, meta: dict[str, str] | None) -> bool:
+        if self.running_timeout_seconds <= 0:
+            return False
+        if not meta:
+            return False
+
+        timestamp = meta.get("updated_at") or meta.get("created_at")
+        if not timestamp:
+            return True
+
+        try:
+            last_active_at = float(timestamp)
+        except ValueError:
+            return True
+
+        return self._now_seconds() - last_active_at >= self.running_timeout_seconds
+
+    def _run_id_from_meta_key(self, meta_key: str) -> str:
+        prefix = "rag:stream:"
+        suffix = ":meta"
+        if not meta_key.startswith(prefix) or not meta_key.endswith(suffix):
+            return ""
+
+        return meta_key[len(prefix) : -len(suffix)]
+
+    async def _ensure_stream_events_key(self, run_id: str) -> None:
+        events_key = self._events_key(run_id)
+        key_type = await self.redis.type(events_key)
+        if isinstance(key_type, bytes):
+            key_type = key_type.decode()
+
+        if key_type in {"none", "stream"}:
+            return
+
+        logger.warning(
+            "清理不兼容的 RAG 流事件键：run_id={} key={} type={}",
+            run_id,
+            events_key,
+            key_type,
+        )
+        await self.redis.delete(events_key)
 
     def _decode_stream_event(
         self,
@@ -362,4 +452,8 @@ class RagStreamRunService:
         return int(milliseconds), int(sequence)
 
 
-rag_stream_run_service = RagStreamRunService(config.redis_url)
+rag_stream_run_service = RagStreamRunService(
+    config.redis_url,
+    terminal_ttl_seconds=config.rag_stream_terminal_ttl_seconds,
+    running_timeout_seconds=config.rag_stream_running_timeout_seconds,
+)

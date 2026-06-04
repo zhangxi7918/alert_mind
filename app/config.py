@@ -33,6 +33,10 @@ class Settings(BaseSettings):
 
     # Redis 配置
     redis_url: str = "redis://localhost:6379"
+    redis_checkpoint_ttl_minutes: int = 10080
+    redis_checkpoint_refresh_on_read: bool = True
+    rag_stream_terminal_ttl_seconds: int = 86400
+    rag_stream_running_timeout_seconds: int = 7200
 
     # 文档分块配置
     chunk_max_size: int = 800

@@ -1,6 +1,8 @@
 import asyncio
+import contextlib
 import unittest
 from collections import defaultdict
+from fnmatch import fnmatch
 from unittest.mock import patch
 
 from app.services.rag_stream_run_service import RagStreamRunService
@@ -12,6 +14,7 @@ class FakeRedis:
         self.streams = defaultdict(list)
         self.stream_counters = defaultdict(int)
         self.expirations = {}
+        self.key_types = {}
         self.condition = asyncio.Condition()
 
     async def ping(self) -> bool:
@@ -34,6 +37,7 @@ class FakeRedis:
 
     async def xadd(self, key: str, fields: dict) -> str:
         self.stream_counters[key] += 1
+        self.key_types[key] = "stream"
         event_id = f"{self.stream_counters[key]}-0"
         self.streams[key].append((event_id, dict(fields)))
         async with self.condition:
@@ -77,6 +81,27 @@ class FakeRedis:
     async def expire(self, key: str, ttl: int) -> None:
         self.expirations[key] = ttl
 
+    async def type(self, key: str) -> str:
+        if key in self.key_types:
+            return self.key_types[key]
+        if key in self.streams:
+            return "stream"
+        if key in self.hashes:
+            return "hash"
+        return "none"
+
+    async def delete(self, key: str) -> None:
+        self.hashes.pop(key, None)
+        self.streams.pop(key, None)
+        self.stream_counters.pop(key, None)
+        self.expirations.pop(key, None)
+        self.key_types.pop(key, None)
+
+    async def scan_iter(self, match: str):
+        for key in list(self.hashes.keys()):
+            if fnmatch(key, match):
+                yield key
+
     def _read_streams(self, streams: dict, count: int) -> list:
         result = []
         for key, from_event_id in streams.items():
@@ -106,8 +131,16 @@ class FakeRagAgent:
 
 
 class RagStreamRunServiceTest(unittest.IsolatedAsyncioTestCase):
-    def _build_service(self, terminal_ttl_seconds: int = 86400) -> RagStreamRunService:
-        service = RagStreamRunService("redis://test", terminal_ttl_seconds=terminal_ttl_seconds)
+    def _build_service(
+        self,
+        terminal_ttl_seconds: int = 86400,
+        running_timeout_seconds: int = 7200,
+    ) -> RagStreamRunService:
+        service = RagStreamRunService(
+            "redis://test",
+            terminal_ttl_seconds=terminal_ttl_seconds,
+            running_timeout_seconds=running_timeout_seconds,
+        )
         service.redis = FakeRedis()
         return service
 
@@ -262,7 +295,121 @@ class RagStreamRunServiceTest(unittest.IsolatedAsyncioTestCase):
         events = [event async for event in service.subscribe("run-5", "0-0")]
 
         self.assertEqual([event["type"] for event in events], ["snapshot", "error"])
-        self.assertIn("服务已重启", events[-1]["data"])
+        self.assertIn("服务已重启或运行超时", events[-1]["data"])
+
+    async def test_cleanup_running_runs_fails_redis_only_running_run(self) -> None:
+        service = self._build_service(terminal_ttl_seconds=60)
+        await service.redis.hset(
+            "rag:stream:run-cleanup:meta",
+            mapping={
+                "run_id": "run-cleanup",
+                "session_id": "s1",
+                "question": "你好",
+                "status": "running",
+                "last_event_id": "0-0",
+                "updated_at": service._now(),
+            },
+        )
+
+        await service.cleanup_running_runs()
+
+        self.assertEqual(
+            service.redis.hashes["rag:stream:run-cleanup:meta"]["status"],
+            "failed",
+        )
+        self.assertEqual(service.redis.expirations["rag:stream:run-cleanup:meta"], 60)
+        self.assertEqual(service.redis.expirations["rag:stream:run-cleanup:events"], 60)
+        self.assertEqual(len(service.redis.streams["rag:stream:run-cleanup:events"]), 1)
+
+    async def test_cleanup_running_runs_replaces_legacy_non_stream_events_key(self) -> None:
+        service = self._build_service(terminal_ttl_seconds=60)
+        await service.redis.hset(
+            "rag:stream:run-legacy:meta",
+            mapping={
+                "run_id": "run-legacy",
+                "session_id": "s1",
+                "question": "你好",
+                "status": "running",
+                "last_event_id": "0-0",
+                "updated_at": service._now(),
+            },
+        )
+        service.redis.key_types["rag:stream:run-legacy:events"] = "list"
+        service.redis.streams["rag:stream:run-legacy:events"].append(
+            ("legacy", {"payload": "{}"})
+        )
+
+        await service.cleanup_running_runs()
+
+        self.assertEqual(
+            service.redis.key_types["rag:stream:run-legacy:events"],
+            "stream",
+        )
+        self.assertEqual(len(service.redis.streams["rag:stream:run-legacy:events"]), 1)
+        _event_id, fields = service.redis.streams["rag:stream:run-legacy:events"][0]
+        self.assertIn("服务已重启或运行超时", fields["payload"])
+
+    async def test_cleanup_running_runs_keeps_active_task_before_timeout(self) -> None:
+        service = self._build_service(running_timeout_seconds=7200)
+        await service.redis.hset(
+            "rag:stream:run-active:meta",
+            mapping={
+                "run_id": "run-active",
+                "session_id": "s1",
+                "question": "你好",
+                "status": "running",
+                "last_event_id": "0-0",
+                "updated_at": service._now(),
+            },
+        )
+
+        task = asyncio.create_task(asyncio.Event().wait())
+        service._tasks["run-active"] = task
+        try:
+            await service.cleanup_running_runs()
+
+            self.assertEqual(
+                service.redis.hashes["rag:stream:run-active:meta"]["status"],
+                "running",
+            )
+            self.assertFalse(task.done())
+            self.assertNotIn("rag:stream:run-active:meta", service.redis.expirations)
+        finally:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+            service._tasks.pop("run-active", None)
+
+    async def test_cleanup_running_runs_cancels_active_task_after_timeout(self) -> None:
+        service = self._build_service(
+            terminal_ttl_seconds=60,
+            running_timeout_seconds=10,
+        )
+        await service.redis.hset(
+            "rag:stream:run-timeout:meta",
+            mapping={
+                "run_id": "run-timeout",
+                "session_id": "s1",
+                "question": "你好",
+                "status": "running",
+                "last_event_id": "0-0",
+                "updated_at": str(service._now_seconds() - 11),
+            },
+        )
+
+        task = asyncio.create_task(asyncio.Event().wait())
+        service._tasks["run-timeout"] = task
+
+        await service.cleanup_running_runs()
+
+        self.assertTrue(task.cancelled())
+        self.assertNotIn("run-timeout", service._tasks)
+        self.assertEqual(
+            service.redis.hashes["rag:stream:run-timeout:meta"]["status"],
+            "failed",
+        )
+        self.assertEqual(service.redis.expirations["rag:stream:run-timeout:meta"], 60)
+        self.assertEqual(service.redis.expirations["rag:stream:run-timeout:events"], 60)
 
     async def test_snapshot_rebuilds_assistant_content_from_events(self) -> None:
         async def stream(_question: str, _session_id: str):
