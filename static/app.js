@@ -5,6 +5,8 @@ class SuperBizAgentApp {
         this.currentMode = 'stream'; // 'quick' 或 'stream'
         this.sessionId = this.generateSessionId();
         this.isStreaming = false;
+        this.streamAbortController = null;
+        this.streamStopRequested = false;
         this.currentChatHistory = []; // 当前对话的消息历史
         this.chatHistories = this.loadChatHistories(); // 所有历史对话
         this.isCurrentChatFromHistory = false; // 标记当前对话是否是从历史记录加载的
@@ -169,7 +171,14 @@ class SuperBizAgentApp {
         
         // 发送消息
         if (this.sendButton) {
-            this.sendButton.addEventListener('click', () => this.sendMessage());
+            this.sendButton.addEventListener('click', () => {
+                if (this.canStopCurrentStream()) {
+                    this.stopCurrentStream();
+                    return;
+                }
+
+                this.sendMessage();
+            });
         }
         
         if (this.messageInput) {
@@ -460,8 +469,10 @@ class SuperBizAgentApp {
                 if (this.chatMessages) {
                     this.chatMessages.innerHTML = '';
                     
-                    // 如果后端有历史记录，使用后端的
-                    if (backendHistory.length > 0) {
+                    const localHasStoppedMessage = history.messages.some(msg => msg.status === 'stopped');
+
+                    // 中断后的半截回答只保存在本地，优先使用本地历史避免被后端完整历史覆盖
+                    if (backendHistory.length > 0 && !localHasStoppedMessage) {
                         this.currentChatHistory = [];
                         backendHistory.forEach(msg => {
                             // 后端返回格式: {role: "user|assistant", content: "...", timestamp: "..."}
@@ -612,7 +623,11 @@ class SuperBizAgentApp {
         
         // 更新发送按钮状态
         if (this.sendButton) {
-            this.sendButton.disabled = this.isStreaming;
+            const canStopStream = this.canStopCurrentStream();
+            this.sendButton.disabled = this.isStreaming && !canStopStream;
+            this.sendButton.classList.toggle('stop-active', canStopStream);
+            this.sendButton.title = canStopStream ? '停止生成' : '发送';
+            this.sendButton.innerHTML = canStopStream ? this.getStopButtonIcon() : this.getSendButtonIcon();
         }
         
         // 更新输入框状态
@@ -620,6 +635,38 @@ class SuperBizAgentApp {
             this.messageInput.disabled = this.isStreaming;
             this.messageInput.placeholder = '问问智能OnCall助手';
         }
+    }
+
+    canStopCurrentStream() {
+        return this.isStreaming &&
+            this.streamAbortController !== null &&
+            !this.streamStopRequested;
+    }
+
+    stopCurrentStream() {
+        if (!this.canStopCurrentStream()) {
+            return;
+        }
+
+        this.streamStopRequested = true;
+        this.updateUI();
+        this.streamAbortController.abort();
+    }
+
+    getSendButtonIcon() {
+        return `
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        `;
+    }
+
+    getStopButtonIcon() {
+        return `
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"/>
+            </svg>
+        `;
     }
 
     // 生成随机会话ID
@@ -719,12 +766,20 @@ class SuperBizAgentApp {
 
     // 发送流式消息
     async sendStreamMessage(message) {
+        this.streamAbortController = new AbortController();
+        this.streamStopRequested = false;
+        this.updateUI();
+
+        let assistantMessageElement = null;
+        let fullResponse = '';
+
         try {
             const response = await fetch(`${this.apiBaseUrl}/chat/stream`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                signal: this.streamAbortController.signal,
                 body: JSON.stringify({
                     session_id: this.sessionId,
                     question: message
@@ -736,8 +791,7 @@ class SuperBizAgentApp {
             }
             
             // 创建助手消息元素
-            const assistantMessageElement = this.addMessage('assistant', '', true);
-            let fullResponse = '';
+            assistantMessageElement = this.addMessage('assistant', '', true);
 
             // 处理流式响应
             const reader = response.body.getReader();
@@ -856,7 +910,16 @@ class SuperBizAgentApp {
                 reader.releaseLock();
             }
         } catch (error) {
+            if (error.name === 'AbortError' && this.streamStopRequested) {
+                this.handleStreamStopped(assistantMessageElement, fullResponse);
+                return;
+            }
+
             throw error;
+        } finally {
+            this.streamAbortController = null;
+            this.streamStopRequested = false;
+            this.updateUI();
         }
     }
 
@@ -1027,6 +1090,40 @@ class SuperBizAgentApp {
         }
     }
 
+    // 处理用户主动停止流式回答
+    handleStreamStopped(assistantMessageElement, fullResponse) {
+        if (!assistantMessageElement) {
+            return;
+        }
+
+        assistantMessageElement.classList.remove('streaming');
+
+        if (!fullResponse) {
+            assistantMessageElement.remove();
+            return;
+        }
+
+        const stoppedResponse = `${fullResponse}\n\n> 已停止生成`;
+        const messageContent = assistantMessageElement.querySelector('.message-content');
+        if (messageContent) {
+            messageContent.innerHTML = this.renderMarkdown(stoppedResponse);
+            this.highlightCodeBlocks(messageContent);
+            this.scrollToBottom();
+        }
+
+        this.currentChatHistory.push({
+            type: 'assistant',
+            content: stoppedResponse,
+            status: 'stopped',
+            timestamp: new Date().toISOString()
+        });
+
+        if (this.isCurrentChatFromHistory) {
+            this.updateCurrentChatHistory();
+            this.renderChatHistory();
+        }
+    }
+
     // 显示通知
     showNotification(message, type = 'info') {
         // 创建通知元素
@@ -1174,26 +1271,15 @@ class SuperBizAgentApp {
 
     // 发送智能运维请求（SSE 流式模式）
     async sendAIOpsRequest(loadingMessageElement, aiopsInput) {
-        const response = await fetch(`${this.apiBaseUrl}/aiops/query`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                input: aiopsInput,
-                session_id: this.sessionId
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP错误: ${response.status}`);
-        }
-
         let streamCompleted = false;
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
+        let reader = null;
         let buffer = '';
         let reportAnimationTimer = null;
+        let decoder = null;
+        this.streamAbortController = new AbortController();
+        this.streamStopRequested = false;
+        this.updateUI();
+
         const aiopsState = {
             status: '正在连接智能运维服务...',
             planSteps: [],
@@ -1366,11 +1452,41 @@ class SuperBizAgentApp {
         };
 
         try {
+            const response = await fetch(`${this.apiBaseUrl}/aiops/query`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                signal: this.streamAbortController.signal,
+                body: JSON.stringify({
+                    input: aiopsInput,
+                    session_id: this.sessionId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP错误: ${response.status}`);
+            }
+
+            reader = response.body.getReader();
+            decoder = new TextDecoder();
+
             while (true) {
                 let readResult;
                 try {
                     readResult = await reader.read();
                 } catch (error) {
+                    if (error.name === 'AbortError' && this.streamStopRequested) {
+                        aiopsState.status = '已停止生成';
+                        aiopsState.isReportStreaming = false;
+                        if (reportAnimationTimer) {
+                            clearInterval(reportAnimationTimer);
+                            reportAnimationTimer = null;
+                        }
+                        renderPanel();
+                        break;
+                    }
+
                     if (this.hasAIOpsPanelContent(aiopsState)) {
                         aiopsState.error = `连接中断，请刷新后重试。${error.message ? `(${error.message})` : ''}`;
                         aiopsState.status = '连接中断';
@@ -1406,8 +1522,25 @@ class SuperBizAgentApp {
                     break;
                 }
             }
+        } catch (error) {
+            if (error.name === 'AbortError' && this.streamStopRequested) {
+                aiopsState.status = '已停止生成';
+                aiopsState.isReportStreaming = false;
+                if (reportAnimationTimer) {
+                    clearInterval(reportAnimationTimer);
+                    reportAnimationTimer = null;
+                }
+                renderPanel();
+            } else {
+                throw error;
+            }
         } finally {
-            reader.releaseLock();
+            if (reader) {
+                reader.releaseLock();
+            }
+            this.streamAbortController = null;
+            this.streamStopRequested = false;
+            this.updateUI();
         }
 
         if (this.hasAIOpsPanelContent(aiopsState)) {
@@ -1415,6 +1548,7 @@ class SuperBizAgentApp {
             this.currentChatHistory.push({
                 type: 'assistant',
                 content: this.buildAIOpsHistoryText(aiopsState),
+                status: aiopsState.status === '已停止生成' ? 'stopped' : undefined,
                 timestamp: new Date().toISOString()
             });
         }

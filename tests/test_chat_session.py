@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from langchain_core.messages import (
     AIMessage,
+    AIMessageChunk,
     HumanMessage,
     SystemMessage,
     ToolMessage,
@@ -25,6 +26,32 @@ class FakeAsyncRedisContext:
 
     async def __aexit__(self, _exc_type, _exc, _traceback) -> None:
         self.exited = True
+
+
+class CloseTrackingStream:
+    def __init__(self, items: list) -> None:
+        self.items = items
+        self.index = 0
+        self.closed = False
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if self.index >= len(self.items):
+            raise StopAsyncIteration
+
+        item = self.items[self.index]
+        self.index += 1
+        return item
+
+    async def aclose(self) -> None:
+        self.closed = True
+
+
+class CancellingStream(CloseTrackingStream):
+    async def __anext__(self):
+        raise asyncio.CancelledError
 
 
 class GetHistoryTest(unittest.TestCase):
@@ -105,6 +132,44 @@ class RagTraceConfigTest(unittest.TestCase):
                 "entrypoint": "chat",
             },
         )
+
+
+class QueryStreamCancellationTest(unittest.TestCase):
+    def _build_service_with_stream(self, stream: CloseTrackingStream) -> RagAgentService:
+        service = RagAgentService()
+        service._initialize_agent = AsyncMock()
+        service.agent = SimpleNamespace(astream=lambda *args, **kwargs: stream)
+        return service
+
+    def test_closes_upstream_when_consumer_stops_early(self) -> None:
+        token = AIMessageChunk(content="hello")
+        stream = CloseTrackingStream([(token, {})])
+        service = self._build_service_with_stream(stream)
+
+        async def consume_first_chunk_then_close() -> dict[str, str]:
+            generator = service.query_stream("你好", "s1")
+            try:
+                return await anext(generator)
+            finally:
+                await generator.aclose()
+
+        chunk = asyncio.run(consume_first_chunk_then_close())
+
+        self.assertEqual(chunk, {"type": "content", "data": "hello"})
+        self.assertTrue(stream.closed)
+
+    def test_re_raises_cancellation_and_closes_upstream(self) -> None:
+        stream = CancellingStream([])
+        service = self._build_service_with_stream(stream)
+
+        async def consume_stream() -> None:
+            async for _chunk in service.query_stream("你好", "s1"):
+                pass
+
+        with self.assertRaises(asyncio.CancelledError):
+            asyncio.run(consume_stream())
+
+        self.assertTrue(stream.closed)
 
 
 class ClearSessionTest(unittest.TestCase):

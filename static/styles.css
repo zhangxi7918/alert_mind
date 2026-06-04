@@ -857,6 +857,16 @@ body {
     color: #202124;
 }
 
+.send-btn-circle.stop-active {
+    background: #fce8e6;
+    color: #d93025;
+}
+
+.send-btn-circle.stop-active:hover {
+    background: #fad2cf;
+    color: #b3261e;
+}
+
 .send-btn-circle:disabled {
     background: #f1f3f4;
     color: #dadce0;

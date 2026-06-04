@@ -1,8 +1,9 @@
+import asyncio
 import json
 from collections.abc import AsyncIterator
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from loguru import logger
 from sse_starlette.sse import EventSourceResponse
 
@@ -16,11 +17,17 @@ def _json_event(message: dict[str, Any]) -> str:
     return json.dumps(message, ensure_ascii=False)
 
 
-def _stream_aiops(input_text: str) -> EventSourceResponse:
+def _stream_aiops(http_request: Request, input_text: str) -> EventSourceResponse:
     async def generator() -> AsyncIterator[str]:
+        stream = aiops_service.run_stream(input_text)
         try:
-            async for event in aiops_service.run_stream(input_text):
+            async for event in stream:
+                if await http_request.is_disconnected():
+                    break
+
                 yield _json_event(event)
+        except asyncio.CancelledError:
+            raise
         except Exception as exc:
             logger.exception("AIOps SSE 流异常中断")
             yield _json_event(
@@ -30,6 +37,8 @@ def _stream_aiops(input_text: str) -> EventSourceResponse:
                     "message": f"智能运维分析中断：{type(exc).__name__}: {exc}",
                 }
             )
+        finally:
+            await stream.aclose()
 
     return EventSourceResponse(
         generator(),
@@ -41,5 +50,8 @@ def _stream_aiops(input_text: str) -> EventSourceResponse:
 
 
 @router.post("/aiops/query")
-async def aiops_query(request: AiopsRequest) -> EventSourceResponse:
-    return _stream_aiops(request.input)
+async def aiops_query(
+    http_request: Request,
+    request: AiopsRequest,
+) -> EventSourceResponse:
+    return _stream_aiops(http_request, request.input)

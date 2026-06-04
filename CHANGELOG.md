@@ -66,6 +66,10 @@
 - fix(static): 默认知识库问答接入流式聊天接口（2026-06-02）
   - 前端默认对话模式改为 `stream`，进入页面后直接请求 `/api/chat/stream`。
   - 初始模式文案和下拉选中状态同步显示为“流式”，保留“快速”作为手动回退模式。
+- feat(chat): 支持流式回答主动中断（2026-06-04）
+  - 流式生成中发送按钮切换为停止按钮，点击后通过 `AbortController` 断开当前回答请求。
+  - 已生成的半截回答保留在界面和本地历史中，并标记为“已停止生成”。
+  - 后端 SSE 流在客户端断开时停止产出，并显式关闭上游 Agent async stream。
 - feat(static): 文件上传放开 PDF 与 Word(.docx) 类型（2026-06-03）
   - `fileInput` 的 accept 增加 `.pdf,.docx`，前端 `allowedExtensions` 与提示文案同步更新，与后端支持的格式对齐。
 - feat(static): 对接会话历史读取与清空接口（2026-06-03）
@@ -141,6 +145,10 @@
   - 前端读流中断时保留已渲染内容，并将中断原因追加为错误提示块。
   - Planner 和 Replanner 结构化输出为空时使用保底计划或兜底报告，避免 `NoneType` 导致流中断。
   - 知识库检索失败时返回降级提示，避免 Milvus collection 未加载等向量库异常打断 AIOps 流。
+- fix(aiops): 支持智能运维流式分析主动中断（2026-06-04）
+  - AI Ops 分析中发送按钮复用停止态，点击后通过 `AbortController` 断开 `/api/aiops/query` SSE 请求。
+  - 用户主动停止时保留当前结构化面板和本地历史，并显示“已停止生成”而不是连接错误。
+  - 后端断连时停止产出 SSE，并显式关闭 LangGraph `astream()`。
 - refactor(aiops): 将 AIOps SSE 输出统一转换为业务事件协议（2026-06-03）
   - Service 层统一将 LangGraph `custom` 与 `updates` 流转换为 `status`、`plan`、`step_complete`、`plan_update`、`report` 和 `complete` 事件。
   - `past_steps` 改用 LangGraph reducer 增量追加，executor 仅返回当前步骤结果，避免历史步骤重复输出。

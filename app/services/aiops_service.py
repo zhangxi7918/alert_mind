@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncIterator
 from typing import Any, Literal
 from uuid import uuid4
@@ -110,19 +111,27 @@ class AIOpsService:
 
     async def run_stream(self, input_text: str) -> AsyncIterator[dict[str, Any]]:
         request_id = str(uuid4())
-        async for stream_mode, payload in self.app.astream(
+        stream = self.app.astream(
             self._build_initial_state(input_text),
             config=self._build_trace_config(request_id),
             stream_mode=["custom", "updates"],
-        ):
-            for event in _events_from_stream_payload(stream_mode, payload):
-                yield event
+        )
+        try:
+            async for stream_mode, payload in stream:
+                for event in _events_from_stream_payload(stream_mode, payload):
+                    yield event
 
-        yield {
-            "type": "complete",
-            "stage": "complete",
-            "message": "诊断流程完成",
-        }
+            yield {
+                "type": "complete",
+                "stage": "complete",
+                "message": "诊断流程完成",
+            }
+        except asyncio.CancelledError:
+            raise
+        finally:
+            aclose = getattr(stream, "aclose", None)
+            if aclose is not None:
+                await aclose()
 
     async def run(self, input_text: str) -> PlanExecuteState:
         request_id = str(uuid4())
