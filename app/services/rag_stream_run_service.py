@@ -13,6 +13,7 @@ from app.config import config
 from app.services.rag_agent_service import rag_agent_service
 
 RunStatus = Literal["running", "completed", "failed", "cancelled"]
+INITIAL_STREAM_ID = "0-0"
 
 
 class RagStreamRunService:
@@ -68,7 +69,7 @@ class RagStreamRunService:
                 "session_id": session_id,
                 "question": question,
                 "status": "running",
-                "last_event_id": "0",
+                "last_event_id": INITIAL_STREAM_ID,
                 "created_at": now,
                 "updated_at": now,
             },
@@ -94,7 +95,7 @@ class RagStreamRunService:
     async def subscribe(
         self,
         run_id: str,
-        from_event_id: int = 0,
+        from_event_id: str = INITIAL_STREAM_ID,
     ) -> AsyncIterator[dict[str, Any]]:
         await self.initialize()
         if not await self.redis.exists(self._meta_key(run_id)):
@@ -103,44 +104,44 @@ class RagStreamRunService:
 
         await self._fail_orphaned_run(run_id)
 
-        pubsub = self.redis.pubsub()
-        await pubsub.subscribe(self._channel(run_id))
-        last_sent_event_id = from_event_id
+        snapshot = await self.get_snapshot(run_id, until_event_id=from_event_id)
+        if snapshot is None:
+            yield self._transient_event(run_id, from_event_id, "error", "流式运行不存在，请重新发送问题。")
+            return
 
-        try:
-            async for event in self._load_events_after(run_id, from_event_id):
-                last_sent_event_id = max(last_sent_event_id, int(event["event_id"]))
-                yield event
+        yield snapshot
+        last_event_id = str(snapshot["event_id"])
 
-            if await self._is_terminal(run_id):
+        async for event in self._load_events_after(run_id, last_event_id):
+            last_event_id = str(event["event_id"])
+            yield event
+
+            if self._is_terminal_event(event):
                 return
 
-            while True:
-                message = await pubsub.get_message(
-                    ignore_subscribe_messages=True,
-                    timeout=1.0,
-                )
-                if message is not None:
-                    event = json.loads(message["data"])
-                    event_id = int(event["event_id"])
-                    if event_id <= last_sent_event_id:
-                        continue
+        while True:
+            stream_events = await self.redis.xread(
+                streams={self._events_key(run_id): last_event_id},
+                count=20,
+                block=1000,
+            )
 
-                    last_sent_event_id = event_id
+            if not stream_events:
+                if await self._is_terminal(run_id):
+                    return
+                continue
+
+            for _stream_name, messages in stream_events:
+                for event_id, fields in messages:
+                    event = self._decode_stream_event(str(event_id), fields)
+                    last_event_id = str(event["event_id"])
                     yield event
 
                     if self._is_terminal_event(event):
                         return
-                    continue
 
-                if await self._is_terminal(run_id):
-                    async for event in self._load_events_after(run_id, last_sent_event_id):
-                        last_sent_event_id = max(last_sent_event_id, int(event["event_id"]))
-                        yield event
-                    return
-        finally:
-            await pubsub.unsubscribe(self._channel(run_id))
-            await pubsub.aclose()
+            if await self._is_terminal(run_id):
+                return
 
     async def cancel_run(self, run_id: str) -> bool:
         await self.initialize()
@@ -163,7 +164,11 @@ class RagStreamRunService:
 
         return True
 
-    async def get_snapshot(self, run_id: str) -> dict[str, Any] | None:
+    async def get_snapshot(
+        self,
+        run_id: str,
+        until_event_id: int | str | None = None,
+    ) -> dict[str, Any] | None:
         await self.initialize()
         if not await self.redis.exists(self._meta_key(run_id)):
             return None
@@ -172,19 +177,33 @@ class RagStreamRunService:
 
         meta = await self.redis.hgetall(self._meta_key(run_id))
         events = [event async for event in self._load_events_after(run_id, 0)]
+        if until_event_id in {0, "0", INITIAL_STREAM_ID}:
+            events = []
+        elif until_event_id is not None:
+            events = [
+                event
+                for event in events
+                if self._stream_id_at_or_before(str(event["event_id"]), until_event_id)
+            ]
         assistant_content = "".join(
             str(event.get("data", ""))
             for event in events
             if event.get("type") == "content"
         )
+        last_event = events[-1] if events else None
+        last_event_id = str(last_event["event_id"]) if last_event else INITIAL_STREAM_ID
+        status = self._snapshot_status(meta.get("status", "failed"), last_event)
 
         return {
             "run_id": run_id,
+            "event_id": last_event_id,
+            "type": "snapshot",
             "session_id": meta.get("session_id", ""),
             "question": meta.get("question", ""),
-            "status": meta.get("status", "failed"),
-            "last_event_id": int(meta.get("last_event_id", "0")),
+            "status": status,
+            "last_event_id": last_event_id,
             "assistant_content": assistant_content,
+            "error_message": self._snapshot_error_message(last_event),
         }
 
     async def _produce_run(self, run_id: str, question: str, session_id: str) -> None:
@@ -221,19 +240,15 @@ class RagStreamRunService:
         event: dict[str, Any],
         status: RunStatus | None = None,
     ) -> dict[str, Any]:
-        event_id = await self.redis.hincrby(self._meta_key(run_id), "last_event_id", 1)
-        payload = {
-            "run_id": run_id,
-            "event_id": event_id,
-            **event,
-        }
+        payload = {"run_id": run_id, **event}
         encoded = json.dumps(payload, ensure_ascii=False)
-        await self.redis.rpush(self._events_key(run_id), encoded)
+        event_id = await self.redis.xadd(self._events_key(run_id), {"payload": encoded})
+        payload["event_id"] = str(event_id)
         mapping: dict[str, str] = {"updated_at": self._now()}
+        mapping["last_event_id"] = str(event_id)
         if status is not None:
             mapping["status"] = status
         await self.redis.hset(self._meta_key(run_id), mapping=mapping)
-        await self.redis.publish(self._channel(run_id), encoded)
 
         if status in {"completed", "failed", "cancelled"}:
             await self.redis.expire(self._meta_key(run_id), self.terminal_ttl_seconds)
@@ -244,12 +259,12 @@ class RagStreamRunService:
     async def _load_events_after(
         self,
         run_id: str,
-        from_event_id: int,
+        from_event_id: int | str,
     ) -> AsyncIterator[dict[str, Any]]:
-        raw_events = await self.redis.lrange(self._events_key(run_id), from_event_id, -1)
-        for raw_event in raw_events:
-            event = json.loads(raw_event)
-            if int(event["event_id"]) > from_event_id:
+        entries = await self.redis.xrange(self._events_key(run_id), min="-", max="+")
+        for event_id, fields in entries:
+            event = self._decode_stream_event(str(event_id), fields)
+            if self._stream_id_after(str(event["event_id"]), from_event_id):
                 yield event
 
     async def _fail_orphaned_run(self, run_id: str) -> None:
@@ -276,13 +291,13 @@ class RagStreamRunService:
     def _transient_event(
         self,
         run_id: str,
-        from_event_id: int,
+        from_event_id: str,
         event_type: str,
         message: str,
     ) -> dict[str, Any]:
         return {
             "run_id": run_id,
-            "event_id": from_event_id + 1,
+            "event_id": from_event_id,
             "type": event_type,
             "data": message,
         }
@@ -293,11 +308,58 @@ class RagStreamRunService:
     def _events_key(self, run_id: str) -> str:
         return f"rag:stream:{run_id}:events"
 
-    def _channel(self, run_id: str) -> str:
-        return f"rag:stream:{run_id}:channel"
-
     def _now(self) -> str:
         return str(time.time())
+
+    def _decode_stream_event(
+        self,
+        event_id: str,
+        fields: dict[str, Any],
+    ) -> dict[str, Any]:
+        payload = json.loads(fields.get("payload", "{}"))
+        payload["event_id"] = event_id
+        return payload
+
+    def _snapshot_status(
+        self,
+        meta_status: str,
+        last_event: dict[str, Any] | None,
+    ) -> str:
+        if last_event is None:
+            return meta_status if meta_status == "running" else "running"
+
+        event_type = last_event.get("type")
+        if event_type == "complete":
+            return "completed"
+        if event_type == "error":
+            return "failed"
+        if event_type == "cancelled":
+            return "cancelled"
+
+        return "running"
+
+    def _snapshot_error_message(self, last_event: dict[str, Any] | None) -> str:
+        if last_event is None or last_event.get("type") != "error":
+            return ""
+
+        return str(last_event.get("data") or last_event.get("message") or "")
+
+    def _stream_id_after(self, event_id: str, from_event_id: int | str) -> bool:
+        if from_event_id in {0, "0", INITIAL_STREAM_ID}:
+            return True
+
+        current_id = self._stream_id_parts(event_id)
+        offset_id = self._stream_id_parts(str(from_event_id))
+        return current_id > offset_id
+
+    def _stream_id_at_or_before(self, event_id: str, until_event_id: int | str) -> bool:
+        current_id = self._stream_id_parts(event_id)
+        offset_id = self._stream_id_parts(str(until_event_id))
+        return current_id <= offset_id
+
+    def _stream_id_parts(self, event_id: str) -> tuple[int, int]:
+        milliseconds, sequence = event_id.split("-", 1)
+        return int(milliseconds), int(sequence)
 
 
 rag_stream_run_service = RagStreamRunService(config.redis_url)

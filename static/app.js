@@ -746,7 +746,7 @@ class SuperBizAgentApp {
                 runId: run.runId,
                 sessionId: run.sessionId,
                 question: run.question || '',
-                lastEventId: Number(run.lastEventId || 0),
+                lastEventId: String(run.lastEventId || '0-0'),
                 updatedAt: new Date().toISOString()
             }));
         } catch (error) {
@@ -905,7 +905,7 @@ class SuperBizAgentApp {
             runId,
             sessionId: this.sessionId,
             question: message,
-            lastEventId: 0,
+            lastEventId: '0-0',
             assistantContent: '',
             messages: [...this.currentChatHistory],
             status: 'running',
@@ -916,12 +916,11 @@ class SuperBizAgentApp {
 
         const assistantMessageElement = this.addMessage('assistant', '', true);
         try {
-            const response = await fetch(`${this.apiBaseUrl}/chat/stream`, {
+            const response = await fetch(`${this.apiBaseUrl}/chat/runs`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                signal: this.streamAbortController.signal,
                 body: JSON.stringify({
                     session_id: this.sessionId,
                     question: message,
@@ -933,7 +932,12 @@ class SuperBizAgentApp {
                 throw new Error(`HTTP错误: ${response.status}`);
             }
 
-            await this.consumeChatStreamResponse(response, assistantMessageElement);
+            const run = await response.json();
+            this.activeChatRun.runId = run.run_id || runId;
+            this.activeChatRun.sessionId = run.session_id || this.sessionId;
+            this.saveActiveChatRun();
+
+            await this.openActiveChatRunStream(assistantMessageElement);
         } catch (error) {
             if (error.name === 'AbortError' && this.streamStopRequested) {
                 this.handleStreamStopped(
@@ -988,22 +992,7 @@ class SuperBizAgentApp {
         this.checkAndSetCentered();
 
         try {
-            const terminalHandled = await this.refreshActiveChatRunSnapshot(assistantMessageElement);
-            if (terminalHandled) {
-                return;
-            }
-
-            const fromEventId = Number(this.activeChatRun.lastEventId || 0);
-            const response = await fetch(
-                `${this.apiBaseUrl}/chat/runs/${this.activeChatRun.runId}/stream?from_event_id=${fromEventId}`,
-                { signal: this.streamAbortController.signal }
-            );
-
-            if (!response.ok) {
-                throw new Error(`HTTP错误: ${response.status}`);
-            }
-
-            await this.consumeChatStreamResponse(response, assistantMessageElement);
+            await this.openActiveChatRunStream(assistantMessageElement);
         } catch (error) {
             if (error.name === 'AbortError' && this.streamStopRequested) {
                 this.handleStreamStopped(
@@ -1046,7 +1035,7 @@ class SuperBizAgentApp {
                 runId: lastRunRef.runId,
                 sessionId: lastRunRef.sessionId,
                 question: lastRunRef.question || '',
-                lastEventId: Number(lastRunRef.lastEventId || 0),
+                lastEventId: String(lastRunRef.lastEventId || '0-0'),
                 assistantContent: '',
                 messages: lastRunRef.question ? [{
                     type: 'user',
@@ -1074,53 +1063,21 @@ class SuperBizAgentApp {
         await this.loadChatHistory(lastOpenChatId);
     }
 
-    async refreshActiveChatRunSnapshot(assistantMessageElement) {
+    async openActiveChatRunStream(assistantMessageElement) {
         if (!this.activeChatRun || !this.activeChatRun.runId) {
-            return true;
+            return;
         }
 
-        const response = await fetch(`${this.apiBaseUrl}/chat/runs/${this.activeChatRun.runId}/snapshot`);
+        const fromEventId = encodeURIComponent(this.activeChatRun.lastEventId || '0-0');
+        const response = await fetch(
+            `${this.apiBaseUrl}/chat/runs/${this.activeChatRun.runId}/stream?from_event_id=${fromEventId}`,
+            { signal: this.streamAbortController.signal }
+        );
         if (!response.ok) {
-            throw new Error(`恢复快照失败: ${response.status}`);
+            throw new Error(`HTTP错误: ${response.status}`);
         }
 
-        const snapshot = await response.json();
-        this.activeChatRun.sessionId = snapshot.session_id || this.activeChatRun.sessionId;
-        this.activeChatRun.question = snapshot.question || this.activeChatRun.question;
-        this.activeChatRun.lastEventId = Number(snapshot.last_event_id || 0);
-        this.activeChatRun.assistantContent = snapshot.assistant_content || '';
-        this.activeChatRun.status = snapshot.status || 'failed';
-        this.activeChatRun.updatedAt = new Date().toISOString();
-        this.activeChatRun.messages = this.activeChatRun.question ? [{
-            type: 'user',
-            content: this.activeChatRun.question,
-            timestamp: new Date().toISOString()
-        }] : [];
-        this.saveActiveChatRun();
-        this.renderStreamingAssistantContent(assistantMessageElement, this.activeChatRun.assistantContent);
-
-        if (this.activeChatRun.status === 'completed') {
-            this.handleStreamComplete(assistantMessageElement, this.activeChatRun.assistantContent);
-            this.clearActiveChatRun();
-            return true;
-        }
-
-        if (this.activeChatRun.status === 'cancelled') {
-            this.handleStreamStopped(assistantMessageElement, this.activeChatRun.assistantContent);
-            this.clearActiveChatRun();
-            return true;
-        }
-
-        if (this.activeChatRun.status === 'failed') {
-            this.renderStreamingAssistantContent(
-                assistantMessageElement,
-                `${this.activeChatRun.assistantContent}\n\n错误: 当前回答无法继续恢复，请重新发送问题。`
-            );
-            this.clearActiveChatRun();
-            return true;
-        }
-
-        return false;
+        await this.consumeChatStreamResponse(response, assistantMessageElement);
     }
 
     async consumeChatStreamResponse(response, assistantMessageElement) {
@@ -1193,10 +1150,10 @@ class SuperBizAgentApp {
                 return false;
             }
 
-                this.activeChatRun.assistantContent += rawData;
-                this.activeChatRun.updatedAt = new Date().toISOString();
-                this.saveActiveChatRun();
-                this.renderStreamingAssistantContent(assistantMessageElement, this.activeChatRun.assistantContent);
+            this.activeChatRun.assistantContent += rawData;
+            this.activeChatRun.updatedAt = new Date().toISOString();
+            this.saveActiveChatRun();
+            this.renderStreamingAssistantContent(assistantMessageElement, this.activeChatRun.assistantContent);
             return false;
         }
     }
@@ -1206,9 +1163,13 @@ class SuperBizAgentApp {
             return false;
         }
 
-        if (this.activeChatRun && Number.isInteger(event.event_id)) {
-            this.activeChatRun.lastEventId = event.event_id;
+        if (this.activeChatRun && event.event_id !== undefined && event.event_id !== null) {
+            this.activeChatRun.lastEventId = String(event.event_id);
             this.activeChatRun.updatedAt = new Date().toISOString();
+        }
+
+        if (event.type === 'snapshot') {
+            return this.handleChatSnapshotEvent(event, assistantMessageElement);
         }
 
         if (event.type === 'run_started') {
@@ -1230,6 +1191,7 @@ class SuperBizAgentApp {
             const content = this.activeChatRun ? this.activeChatRun.assistantContent : '';
             this.handleStreamComplete(assistantMessageElement, content);
             this.clearActiveChatRun();
+            this.clearLastActiveRunRef();
             return true;
         }
 
@@ -1254,6 +1216,53 @@ class SuperBizAgentApp {
         }
 
         this.saveActiveChatRun();
+        return false;
+    }
+
+    handleChatSnapshotEvent(event, assistantMessageElement) {
+        if (!this.activeChatRun) {
+            return false;
+        }
+
+        this.activeChatRun.sessionId = event.session_id || this.activeChatRun.sessionId;
+        this.activeChatRun.question = event.question || this.activeChatRun.question;
+        this.activeChatRun.lastEventId = String(event.last_event_id || event.event_id || '0-0');
+        this.activeChatRun.assistantContent = event.assistant_content || '';
+        this.activeChatRun.status = event.status || 'running';
+        this.activeChatRun.updatedAt = new Date().toISOString();
+        this.activeChatRun.messages = this.activeChatRun.question ? [{
+            type: 'user',
+            content: this.activeChatRun.question,
+            timestamp: new Date().toISOString()
+        }] : [];
+        this.currentChatHistory = [...this.activeChatRun.messages];
+        this.saveActiveChatRun();
+        this.renderStreamingAssistantContent(assistantMessageElement, this.activeChatRun.assistantContent);
+
+        if (this.activeChatRun.status === 'completed') {
+            this.handleStreamComplete(assistantMessageElement, this.activeChatRun.assistantContent);
+            this.clearActiveChatRun();
+            this.clearLastActiveRunRef();
+            return true;
+        }
+
+        if (this.activeChatRun.status === 'cancelled') {
+            this.handleStreamStopped(assistantMessageElement, this.activeChatRun.assistantContent);
+            this.clearActiveChatRun();
+            return true;
+        }
+
+        if (this.activeChatRun.status === 'failed') {
+            const errorMessage = event.error_message || '当前回答无法继续恢复，请重新发送问题。';
+            this.renderStreamingAssistantContent(
+                assistantMessageElement,
+                `${this.activeChatRun.assistantContent}\n\n错误: ${errorMessage}`
+            );
+            this.clearActiveChatRun();
+            this.clearLastActiveRunRef();
+            return true;
+        }
+
         return false;
     }
 

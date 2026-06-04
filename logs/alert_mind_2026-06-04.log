@@ -210,3 +210,72 @@
 2026-06-04 19:28:42.780 | INFO     | app.main:74 - GET /api/session/session_3zkzdvqnf_1780571872074/history 200 9ms
 2026-06-04 19:28:52.046 | INFO     | app.main:74 - GET /api/session/session_aittkpns6_1780572388924/history 200 49ms
 2026-06-04 19:28:52.857 | INFO     | app.main:74 - GET /api/session/session_3zkzdvqnf_1780571872074/history 200 9ms
+2026-06-04 20:54:57.552 | INFO     | app.main:74 - GET / 200 12ms
+2026-06-04 20:54:57.725 | INFO     | app.main:74 - GET /static/styles.css 200 4ms
+2026-06-04 20:54:57.751 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 6ms
+2026-06-04 20:54:57.758 | INFO     | app.main:74 - GET /static/app.js 200 15ms
+2026-06-04 20:54:58.491 | INFO     | app.main:74 - GET /api/session/session_djdn19am6_1780577379306/history 200 63ms
+2026-06-04 20:55:06.402 | INFO     | app.main:74 - POST /api/chat/runs 200 61ms
+2026-06-04 20:55:06.444 | INFO     | app.main:74 - GET /api/chat/runs/run_7np3czl3n_1780577706307/stream 200 31ms
+2026-06-04 20:55:09.421 | WARNING  | app.tools.knowledge_tool:13 - 知识库检索失败，将返回降级提示：<MilvusException: (code=101, message=failed to search: collection not loaded[collection=466668330144022101])>
+2026-06-04 20:55:40.630 | INFO     | app.main:74 - GET / 200 3ms
+2026-06-04 20:55:40.677 | INFO     | app.main:74 - GET /static/styles.css 200 3ms
+2026-06-04 20:55:40.681 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 2ms
+2026-06-04 20:55:40.682 | INFO     | app.main:74 - GET /static/app.js 200 5ms
+2026-06-04 20:55:44.250 | INFO     | app.main:74 - POST /api/chat/runs 200 28ms
+2026-06-04 20:55:44.277 | INFO     | app.main:74 - GET /api/chat/runs/run_6j8yfn9eo_1780577744217/stream 200 14ms
+2026-06-04 20:55:47.597 | WARNING  | app.tools.knowledge_tool:13 - 知识库检索失败，将返回降级提示：<MilvusException: (code=101, message=failed to search: collection not loaded[collection=466668330144022101])>
+2026-06-04 20:55:49.574 | INFO     | app.main:74 - GET / 200 1ms
+2026-06-04 20:55:49.611 | INFO     | app.main:74 - GET /static/styles.css 200 1ms
+2026-06-04 20:55:49.611 | INFO     | app.main:74 - GET /static/app.js 200 1ms
+2026-06-04 20:55:49.615 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 0ms
+2026-06-04 20:55:50.197 | INFO     | app.main:74 - GET /api/chat/runs/run_6j8yfn9eo_1780577744217/stream 200 1ms
+2026-06-04 20:55:54.892 | INFO     | app.main:74 - GET / 200 1ms
+2026-06-04 20:55:54.925 | INFO     | app.main:74 - GET /static/styles.css 200 2ms
+2026-06-04 20:55:54.926 | INFO     | app.main:74 - GET /static/app.js 200 2ms
+2026-06-04 20:55:54.929 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 0ms
+2026-06-04 20:55:55.454 | INFO     | app.main:74 - GET /api/chat/runs/run_6j8yfn9eo_1780577744217/stream 200 1ms
+2026-06-04 20:55:57.851 | INFO     | app.main:74 - GET / 200 2ms
+2026-06-04 20:55:57.883 | INFO     | app.main:74 - GET /static/styles.css 200 3ms
+2026-06-04 20:55:57.888 | INFO     | app.main:74 - GET /static/app.js 200 2ms
+2026-06-04 20:55:57.891 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 1ms
+2026-06-04 20:55:59.096 | INFO     | app.main:74 - GET /api/chat/runs/run_6j8yfn9eo_1780577744217/stream 200 1ms
+2026-06-04 21:02:34.734 | INFO     | app.main:42 - 服务启动中...
+2026-06-04 21:02:34.735 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 21:03:48.825 | INFO     | app.main:42 - 服务启动中...
+2026-06-04 21:03:48.826 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 21:04:22.621 | INFO     | app.main:42 - 服务启动中...
+2026-06-04 21:04:22.622 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 21:07:47.413 | INFO     | app.main:74 - GET / 200 32ms
+2026-06-04 21:07:47.588 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 4ms
+2026-06-04 21:07:47.597 | INFO     | app.main:74 - GET /static/styles.css 200 14ms
+2026-06-04 21:07:47.598 | INFO     | app.main:74 - GET /static/app.js 200 9ms
+2026-06-04 21:07:49.130 | INFO     | app.main:74 - GET /api/session/session_rxnki2ytu_1780577741643/history 200 588ms
+2026-06-04 21:07:54.719 | INFO     | app.main:74 - POST /api/chat/runs 200 103ms
+2026-06-04 21:07:54.741 | INFO     | app.main:74 - GET /api/chat/runs/run_pqyhfw3ez_1780578474597/stream 200 11ms
+2026-06-04 21:07:57.802 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：16 条 → top 3
+2026-06-04 21:08:01.073 | INFO     | app.main:74 - GET / 200 3ms
+2026-06-04 21:08:01.128 | INFO     | app.main:74 - GET /static/styles.css 200 1ms
+2026-06-04 21:08:01.135 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 1ms
+2026-06-04 21:08:01.136 | INFO     | app.main:74 - GET /static/app.js 200 2ms
+2026-06-04 21:08:01.503 | INFO     | app.main:74 - GET /api/chat/runs/run_pqyhfw3ez_1780578474597/stream 200 1ms
+2026-06-04 21:08:04.046 | INFO     | app.main:74 - GET / 200 1ms
+2026-06-04 21:08:04.079 | INFO     | app.main:74 - GET /static/styles.css 200 1ms
+2026-06-04 21:08:04.089 | INFO     | app.main:74 - GET /static/app.js 200 5ms
+2026-06-04 21:08:04.105 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 0ms
+2026-06-04 21:08:04.344 | INFO     | app.main:74 - GET /api/chat/runs/run_pqyhfw3ez_1780578474597/stream 200 1ms
+2026-06-04 21:08:06.339 | INFO     | app.main:74 - GET / 200 1ms
+2026-06-04 21:08:06.368 | INFO     | app.main:74 - GET /static/styles.css 200 3ms
+2026-06-04 21:08:06.370 | INFO     | app.main:74 - GET /static/app.js 200 1ms
+2026-06-04 21:08:06.374 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 2ms
+2026-06-04 21:08:06.684 | INFO     | app.main:74 - GET /api/chat/runs/run_pqyhfw3ez_1780578474597/stream 200 3ms
+2026-06-04 21:08:07.990 | INFO     | app.main:74 - GET / 200 5ms
+2026-06-04 21:08:08.028 | INFO     | app.main:74 - GET /static/styles.css 200 1ms
+2026-06-04 21:08:08.032 | INFO     | app.main:74 - GET /static/app.js 200 2ms
+2026-06-04 21:08:08.037 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 0ms
+2026-06-04 21:08:08.325 | INFO     | app.main:74 - GET /api/chat/runs/run_pqyhfw3ez_1780578474597/stream 200 1ms
+2026-06-04 21:08:09.682 | INFO     | app.main:74 - GET / 200 1ms
+2026-06-04 21:08:09.704 | INFO     | app.main:74 - GET /static/styles.css 200 1ms
+2026-06-04 21:08:09.706 | INFO     | app.main:74 - GET /static/app.js 200 2ms
+2026-06-04 21:08:09.714 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 0ms
+2026-06-04 21:08:09.969 | INFO     | app.main:74 - GET /api/chat/runs/run_pqyhfw3ez_1780578474597/stream 200 1ms
