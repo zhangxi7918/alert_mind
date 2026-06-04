@@ -491,7 +491,7 @@ class SuperBizAgentApp {
                         this.currentChatHistory = [];
                         backendHistory.forEach(msg => {
                             // 后端返回格式: {role: "user|assistant", content: "...", timestamp: "..."}
-                            const messageType = msg.role === 'user' ? 'user' : 'bot';
+                            const messageType = msg.role === 'user' ? 'user' : 'assistant';
                             this.addMessage(messageType, msg.content, false, false);
                         });
                     } else {
