@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncIterator
 
 from langchain.agents import create_agent
@@ -89,19 +90,28 @@ class RagAgentService:
     ) -> AsyncIterator[dict[str, str]]:
         await self._initialize_agent()
 
-        async for token, _metadata in self.agent.astream(
+        stream = self.agent.astream(
             self._build_input(question),
             config=self._build_config(session_id),
             stream_mode="messages",
-        ):
-            if not isinstance(token, AIMessageChunk):
-                continue
+        )
+        try:
+            async for token, _metadata in stream:
+                if not isinstance(token, AIMessageChunk):
+                    continue
 
-            for block in token.content_blocks:
-                if block.get("type") == "text":
-                    yield {"type": "content", "data": block.get("text", "")}
+                for block in token.content_blocks:
+                    if block.get("type") == "text":
+                        yield {"type": "content", "data": block.get("text", "")}
 
-        yield {"type": "complete"}
+            yield {"type": "complete"}
+        except asyncio.CancelledError:
+            logger.info("RAG 流式回答已取消：session_id={}", session_id)
+            raise
+        finally:
+            aclose = getattr(stream, "aclose", None)
+            if aclose is not None:
+                await aclose()
 
     async def get_history(self, session_id: str) -> list[dict[str, str]]:
         """读取指定会话的对话历史，仅保留用户提问与助手有效回答。"""

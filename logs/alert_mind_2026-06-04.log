@@ -30,3 +30,91 @@
 2026-06-04 12:09:21.927 | INFO     | app.services.rag_agent_service:35 - 初始化 Redis 会话记忆：redis://localhost:6379
 2026-06-04 12:09:42.875 | INFO     | app.main:41 - 服务启动中...
 2026-06-04 12:09:42.876 | INFO     | app.services.rag_agent_service:35 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 15:32:31.775 | INFO     | app.main:71 - POST /api/chat/stream 200 34ms
+2026-06-04 15:51:16.389 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 15:51:16.389 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 15:51:23.923 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 15:51:23.923 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 15:51:38.847 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 15:51:38.848 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 15:53:50.090 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 15:53:50.091 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 15:55:10.091 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 15:55:10.091 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 15:57:57.589 | INFO     | app.main:71 - GET / 200 12ms
+2026-06-04 15:57:57.667 | INFO     | app.main:71 - GET /static/styles.css 200 9ms
+2026-06-04 15:57:57.669 | INFO     | app.main:71 - GET /static/app.js 200 2ms
+2026-06-04 15:58:00.608 | INFO     | app.main:71 - GET /api/session/session_j0bv5h5qg_1780505164316/history 200 566ms
+2026-06-04 15:58:06.724 | INFO     | app.main:71 - POST /api/chat/stream 200 70ms
+2026-06-04 15:58:11.329 | INFO     | app.main:71 - GET /api/session/session_tno6t3569_1780500680150/history 200 5ms
+2026-06-04 15:58:15.745 | INFO     | app.main:71 - POST /api/aiops/query 200 47ms
+2026-06-04 15:58:16.860 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-04 15:58:32.627 | INFO     | app.main:71 - GET / 200 2ms
+2026-06-04 15:58:32.679 | INFO     | app.main:71 - GET /static/styles.css 200 3ms
+2026-06-04 15:58:32.681 | INFO     | app.main:71 - GET /static/app.js 200 4ms
+2026-06-04 15:58:35.925 | INFO     | app.main:71 - GET /api/session/session_j0bv5h5qg_1780505164316/history 200 3ms
+2026-06-04 15:58:36.852 | INFO     | app.main:71 - GET /api/session/session_l9ezgupsp_1780559883020/history 200 13ms
+2026-06-04 15:58:38.041 | INFO     | app.main:71 - GET /api/session/session_j0bv5h5qg_1780505164316/history 200 2ms
+2026-06-04 15:58:39.043 | INFO     | app.main:71 - GET /api/session/session_l9ezgupsp_1780559883020/history 200 5ms
+2026-06-04 15:58:40.150 | INFO     | app.main:71 - GET / 200 1ms
+2026-06-04 15:58:40.173 | INFO     | app.main:71 - GET /static/styles.css 200 1ms
+2026-06-04 15:58:40.175 | INFO     | app.main:71 - GET /static/app.js 200 1ms
+2026-06-04 15:58:43.377 | INFO     | app.main:71 - GET /api/session/session_ogpzhkb9d_1780480902803/history 200 2ms
+2026-06-04 15:58:49.476 | INFO     | app.main:71 - POST /api/chat/stream 200 10ms
+2026-06-04 15:58:52.777 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-04 15:58:55.575 | INFO     | app.services.rag_agent_service:109 - RAG 流式回答已取消：session_id=session_mq599f25e_1780559927258
+2026-06-04 15:59:01.692 | INFO     | app.main:71 - GET /api/session/session_j0bv5h5qg_1780505164316/history 200 4ms
+2026-06-04 15:59:02.736 | INFO     | app.main:71 - GET /api/session/session_mq599f25e_1780559927258/history 200 13ms
+2026-06-04 15:59:03.712 | INFO     | app.main:71 - GET /api/session/session_l9ezgupsp_1780559883020/history 200 4ms
+2026-06-04 15:59:04.256 | INFO     | app.main:71 - GET /api/session/session_mq599f25e_1780559927258/history 200 4ms
+2026-06-04 15:59:05.277 | INFO     | app.main:71 - GET / 200 1ms
+2026-06-04 15:59:05.303 | INFO     | app.main:71 - GET /static/styles.css 200 2ms
+2026-06-04 15:59:05.307 | INFO     | app.main:71 - GET /static/app.js 200 1ms
+2026-06-04 15:59:07.035 | INFO     | app.main:71 - GET /api/session/session_mq599f25e_1780559927258/history 200 9ms
+2026-06-04 15:59:48.664 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 15:59:48.665 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 15:59:51.201 | INFO     | app.main:71 - GET / 200 5ms
+2026-06-04 15:59:51.221 | INFO     | app.main:71 - GET /static/styles.css 200 1ms
+2026-06-04 15:59:51.222 | INFO     | app.main:71 - GET /static/app.js 200 1ms
+2026-06-04 15:59:53.632 | INFO     | app.main:71 - GET /api/session/session_mq599f25e_1780559927258/history 200 344ms
+2026-06-04 16:04:03.377 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 16:04:03.378 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 16:04:15.402 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 16:04:15.402 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 16:05:33.492 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 16:05:33.492 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 16:10:04.837 | INFO     | app.main:71 - GET / 200 9ms
+2026-06-04 16:10:04.895 | INFO     | app.main:71 - GET /static/styles.css 200 6ms
+2026-06-04 16:10:04.896 | INFO     | app.main:71 - GET /static/app.js 200 2ms
+2026-06-04 16:10:07.787 | INFO     | app.main:71 - GET /api/session/session_mq599f25e_1780559927258/history 200 548ms
+2026-06-04 16:10:07.970 | INFO     | app.main:71 - GET /api/session/session_mq599f25e_1780559927258/history 200 7ms
+2026-06-04 16:10:10.838 | INFO     | app.main:71 - POST /api/aiops/query 200 119ms
+2026-06-04 16:10:11.821 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-04 16:10:18.574 | INFO     | app.main:71 - GET /api/session/session_i136spdbl_1780560610711/history 200 5ms
+2026-06-04 16:10:22.771 | INFO     | app.main:71 - POST /api/aiops/query 200 3ms
+2026-06-04 16:10:23.600 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-04 16:10:40.636 | INFO     | app.main:71 - GET /api/session/session_3vshjlt0h_1780560622761/history 200 3ms
+2026-06-04 16:10:43.034 | INFO     | app.main:71 - GET /api/session/session_3vshjlt0h_1780560622761/history 200 2ms
+2026-06-04 16:10:52.914 | INFO     | app.main:71 - POST /api/aiops/query 200 7ms
+2026-06-04 16:10:53.801 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-04 16:10:55.912 | INFO     | app.main:71 - GET /api/session/session_l9ezgupsp_1780559883020/history 200 11ms
+2026-06-04 16:10:57.550 | INFO     | app.main:71 - GET /api/session/session_ydo241iia_1780560652895/history 200 2ms
+2026-06-04 16:10:58.599 | INFO     | app.main:71 - GET /api/session/session_3vshjlt0h_1780560622761/history 200 3ms
+2026-06-04 16:10:59.367 | INFO     | app.main:71 - GET /api/session/session_ydo241iia_1780560652895/history 200 2ms
+2026-06-04 16:11:01.419 | INFO     | app.main:71 - GET /api/session/session_ydo241iia_1780560652895/history 200 3ms
+2026-06-04 16:11:02.756 | INFO     | app.main:71 - GET /api/session/session_mq599f25e_1780559927258/history 200 7ms
+2026-06-04 16:11:03.740 | INFO     | app.main:71 - GET /api/session/session_ydo241iia_1780560652895/history 200 5ms
+2026-06-04 16:11:06.135 | INFO     | app.main:71 - GET /api/session/session_ydo241iia_1780560652895/history 200 3ms
+2026-06-04 16:11:12.911 | INFO     | app.main:71 - GET /api/session/session_3vshjlt0h_1780560622761/history 200 6ms
+2026-06-04 16:11:13.547 | INFO     | app.main:71 - GET /api/session/session_ydo241iia_1780560652895/history 200 2ms
+2026-06-04 16:11:30.831 | INFO     | app.main:71 - GET / 200 3ms
+2026-06-04 16:11:30.867 | INFO     | app.main:71 - GET /static/styles.css 200 1ms
+2026-06-04 16:11:30.878 | INFO     | app.main:71 - GET /static/app.js 200 4ms
+2026-06-04 16:11:35.662 | INFO     | app.main:71 - GET /api/session/session_ydo241iia_1780560652895/history 200 10ms
+2026-06-04 16:11:36.597 | INFO     | app.main:71 - GET /api/session/session_3vshjlt0h_1780560622761/history 200 1ms
+2026-06-04 16:11:37.562 | INFO     | app.main:71 - GET /api/session/session_i136spdbl_1780560610711/history 200 2ms
+2026-06-04 16:11:38.137 | INFO     | app.main:71 - GET /api/session/session_mq599f25e_1780559927258/history 200 9ms
+2026-06-04 16:11:43.771 | INFO     | app.main:71 - POST /api/chat/stream 200 4ms
+2026-06-04 16:11:46.749 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-04 16:11:49.467 | INFO     | app.main:71 - GET /api/session/session_l9ezgupsp_1780559883020/history 200 8ms
+2026-06-04 16:11:50.468 | INFO     | app.main:71 - GET /api/session/session_8irpe8k6x_1780560701928/history 200 7ms

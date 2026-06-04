@@ -1,7 +1,7 @@
 import json
 from collections.abc import AsyncIterator
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from sse_starlette.sse import EventSourceResponse
 
 from app.models.request import ChatRequest
@@ -22,13 +22,23 @@ async def chat(request: ChatRequest) -> dict[str, str]:
 
 
 @router.post("/chat/stream")
-async def chat_stream(request: ChatRequest) -> EventSourceResponse:
+async def chat_stream(
+    request: Request,
+    chat_request: ChatRequest,
+) -> EventSourceResponse:
     async def generator() -> AsyncIterator[str]:
-        async for chunk in rag_agent_service.query_stream(
-            request.question,
-            request.session_id,
-        ):
-            yield json.dumps(chunk, ensure_ascii=False)
+        stream = rag_agent_service.query_stream(
+            chat_request.question,
+            chat_request.session_id,
+        )
+        try:
+            async for chunk in stream:
+                if await request.is_disconnected():
+                    break
+
+                yield json.dumps(chunk, ensure_ascii=False)
+        finally:
+            await stream.aclose()
 
     return EventSourceResponse(generator())
 

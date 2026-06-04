@@ -1,3 +1,4 @@
+import asyncio
 import operator
 from types import SimpleNamespace
 from typing import Annotated, get_args, get_origin
@@ -41,6 +42,40 @@ class FakeAIOpsInvokeApp:
             "past_steps": [],
             "response": "完成",
         }
+
+
+class CloseTrackingAIOpsStream:
+    def __init__(self, items: list) -> None:
+        self.items = items
+        self.index = 0
+        self.closed = False
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if self.index >= len(self.items):
+            raise StopAsyncIteration
+
+        item = self.items[self.index]
+        self.index += 1
+        return item
+
+    async def aclose(self) -> None:
+        self.closed = True
+
+
+class CancellingAIOpsStream(CloseTrackingAIOpsStream):
+    async def __anext__(self):
+        raise asyncio.CancelledError
+
+
+class FakeCloseTrackingAIOpsApp:
+    def __init__(self, stream: CloseTrackingAIOpsStream) -> None:
+        self.stream = stream
+
+    def astream(self, initial_state, *, config, stream_mode):
+        return self.stream
 
 
 class AIOpsEventConversionTest(unittest.TestCase):
@@ -136,6 +171,33 @@ class AIOpsTraceConfigTest(unittest.IsolatedAsyncioTestCase):
             ["custom", "updates"],
         )
         self.assertEqual(fake_app.astream_calls[0]["config"], self._expected_trace_config())
+
+    async def test_run_stream_closes_upstream_when_consumer_stops_early(self) -> None:
+        stream = CloseTrackingAIOpsStream(
+            [("custom", {"type": "status", "message": "正在准备工具链"})]
+        )
+        service = AIOpsService()
+        service.app = FakeCloseTrackingAIOpsApp(stream)
+
+        generator = service.run_stream("诊断服务")
+        try:
+            event = await anext(generator)
+        finally:
+            await generator.aclose()
+
+        self.assertEqual(event["type"], "status")
+        self.assertTrue(stream.closed)
+
+    async def test_run_stream_re_raises_cancellation_and_closes_upstream(self) -> None:
+        stream = CancellingAIOpsStream([])
+        service = AIOpsService()
+        service.app = FakeCloseTrackingAIOpsApp(stream)
+
+        with self.assertRaises(asyncio.CancelledError):
+            async for _event in service.run_stream("诊断服务"):
+                pass
+
+        self.assertTrue(stream.closed)
 
     async def test_run_passes_langsmith_trace_config(self) -> None:
         service = AIOpsService()
