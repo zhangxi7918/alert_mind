@@ -94,6 +94,8 @@
 - feat(static): 对接会话历史读取与清空接口（2026-06-03）
   - 读取历史 URL 改为 `GET /api/session/{id}/history`，响应字段由 `data.history` 改为 `data.messages`。
   - 清空会话改为 `DELETE /api/session/{id}`，状态判断由 `'success'` 改为 `'cleared'`，去掉 POST body。
+- fix(static): 修复后端历史回答未按 Markdown 渲染（2026-06-05）
+  - 后端历史中的 `assistant` 角色恢复为前端 `assistant` 消息类型，避免被误映射为纯文本 `bot` 消息。
 
 ## RAG Agent 服务
 

@@ -1,0 +1,15 @@
+2026-06-05 00:04:11.562 | INFO     | app.main:74 - GET / 200 32ms
+2026-06-05 00:04:11.743 | INFO     | app.main:74 - GET /static/styles.css 200 11ms
+2026-06-05 00:04:11.746 | INFO     | app.main:74 - GET /static/app.js 200 12ms
+2026-06-05 00:04:11.759 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 5ms
+2026-06-05 00:04:12.677 | INFO     | app.main:74 - GET /api/session/session_antrjr4hg_1780587864712/history 200 50ms
+2026-06-05 00:04:14.720 | INFO     | app.main:74 - GET /api/session/session_antrjr4hg_1780587864712/history 200 11ms
+2026-06-05 00:04:15.663 | INFO     | app.main:74 - GET /api/session/session_97l1s81zo_1780579058611/history 200 8ms
+2026-06-05 00:04:16.489 | INFO     | app.main:74 - GET /api/session/session_66y9cg65e_1780578472350/history 200 18ms
+2026-06-05 00:04:19.542 | INFO     | app.main:74 - GET /api/session/session_ydo241iia_1780560652895/history 200 12ms
+2026-06-05 00:04:21.522 | INFO     | app.main:74 - GET /api/session/session_antrjr4hg_1780587864712/history 200 15ms
+2026-06-05 00:04:22.780 | INFO     | app.main:74 - GET /api/session/session_97l1s81zo_1780579058611/history 200 6ms
+2026-06-05 00:04:23.623 | INFO     | app.main:74 - GET /api/session/session_antrjr4hg_1780587864712/history 200 52ms
+2026-06-05 00:04:24.305 | INFO     | app.main:74 - GET /api/session/session_66y9cg65e_1780578472350/history 200 10ms
+2026-06-05 00:04:26.947 | INFO     | app.main:74 - GET /api/session/session_antrjr4hg_1780587864712/history 200 8ms
+2026-06-05 00:04:27.778 | INFO     | app.main:74 - GET /api/session/session_97l1s81zo_1780579058611/history 200 6ms
