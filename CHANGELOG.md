@@ -129,6 +129,10 @@
   - 新增 Redis 事件日志和运行元数据，浏览器断连后后台任务继续生成并支持按 `event_id` 回放。
   - `POST /api/chat/stream` 支持 `run_id`，新增续订接口与取消接口，SSE 事件统一携带 `run_id` 和 `event_id`。
   - 补充单元测试覆盖断连后继续生成、偏移回放、取消、终态 TTL 和孤儿运行失败提示。
+- refactor(chat): 使用 Redis Stream 简化 RAG 断点续传（2026-06-04）
+  - 将可恢复 SSE 事件日志从 Redis list + pub/sub 改为 Redis Stream，由 Stream ID 作为续传偏移。
+  - 新增 `POST /api/chat/runs` 创建运行，统一 `GET /api/chat/runs/{run_id}/stream` 先返回 `snapshot` 校准前端状态，再追加后续 `content`。
+  - 前端新发与刷新恢复共用同一 stream 消费逻辑，完成、取消或失败后清理运行引用。
 - fix(chat): 为 RAG 可恢复流新增运行快照接口（2026-06-04）
   - `GET /api/chat/runs/{run_id}/snapshot` 从 Redis 事件日志重建当前半截回答，供刷新恢复前校准前端状态。
   - 快照读取会识别进程重启后的孤儿运行并返回失败状态，避免前端一直等待不存在的后台任务。

@@ -43,11 +43,26 @@ async def chat_stream(
     return _stream_response(generator())
 
 
+@router.post("/chat/runs")
+async def create_chat_run(chat_request: ChatRequest) -> dict[str, str]:
+    run_id = await rag_stream_run_service.start_run(
+        chat_request.question,
+        chat_request.session_id,
+        chat_request.run_id,
+    )
+
+    return {
+        "run_id": run_id,
+        "session_id": chat_request.session_id,
+        "status": "running",
+    }
+
+
 @router.get("/chat/runs/{run_id}/stream")
 async def resume_chat_stream(
     run_id: str,
     request: Request,
-    from_event_id: int = Query(default=0, ge=0),
+    from_event_id: str = Query(default="0-0"),
 ) -> EventSourceResponse:
     async def generator() -> AsyncIterator[str]:
         async for event in rag_stream_run_service.subscribe(run_id, from_event_id):
