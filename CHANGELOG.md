@@ -4,6 +4,12 @@
   - 新增 `eval/rag_golden.jsonl`，覆盖 Runbook、Prometheus 指标、告警规则、故障复盘和 negative case。
   - 新增离线评测脚本，按当前 RAG 配置输出 `accuracy@k(hit@k)`、召回率、精确率和 negative pass rate。
   - 提取纯函数评测逻辑并补充单元测试，避免单测依赖 Milvus 或 DashScope。
+- fix(rag): Rerank 粗召回阶段应用相关性阈值（2026-06-04）
+  - 避免无关查询绕过 `rag_score_threshold` 后被 reranker 强行返回 top-k。
+  - 补充 `VectorSearchService` 单元测试，覆盖阈值传递和空候选跳过 rerank。
+- test(rag-eval): 扩充 RAG golden dataset 的真实排障与近域负向样本（2026-06-04）
+  - 新增症状型、多文档、多跳和容易混淆的近域负向查询，减少只靠文档名或告警名命中的乐观偏差。
+  - 补齐云杉智能客服平台使用手册的正向覆盖，避免已入库业务文档长期只在负向样本中出现。
 
 ## 可观测性
 

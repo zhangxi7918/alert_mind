@@ -12,3 +12,21 @@
 2026-06-04 00:45:49.982 | INFO     | app.services.rag_agent_service:35 - 初始化 Redis 会话记忆：redis://localhost:6379
 2026-06-04 00:46:04.459 | INFO     | app.main:71 - POST /api/aiops/query 200 92ms
 2026-06-04 00:46:05.476 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-04 11:57:54.852 | INFO     | app.main:71 - GET / 200 19ms
+2026-06-04 11:57:54.919 | INFO     | app.main:71 - GET /static/styles.css 200 2ms
+2026-06-04 11:57:54.920 | INFO     | app.main:71 - GET /static/app.js 200 2ms
+2026-06-04 11:57:59.056 | INFO     | app.main:71 - POST /api/chat/stream 200 42ms
+2026-06-04 11:58:01.820 | WARNING  | app.tools.knowledge_tool:13 - 知识库检索失败，将返回降级提示：<MilvusException: (code=101, message=failed to search: collection not loaded[collection=466668330144022101])>
+2026-06-04 11:58:03.970 | INFO     | app.main:71 - GET / 200 2ms
+2026-06-04 11:58:03.994 | INFO     | app.main:71 - GET /static/styles.css 200 1ms
+2026-06-04 11:58:03.994 | INFO     | app.main:71 - GET /static/app.js 200 1ms
+2026-06-04 11:58:06.162 | INFO     | app.main:71 - GET /api/session/session_j0bv5h5qg_1780505164316/history 200 4ms
+2026-06-04 11:58:08.468 | INFO     | app.main:71 - GET /api/session/session_my4jdwz9z_1780503011063/history 200 10ms
+2026-06-04 11:58:09.311 | INFO     | app.main:71 - GET /api/session/session_j0bv5h5qg_1780505164316/history 200 3ms
+2026-06-04 11:58:12.375 | INFO     | app.main:71 - GET /api/session/session_j0bv5h5qg_1780505164316/history 200 3ms
+2026-06-04 12:03:52.781 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 12:03:52.782 | INFO     | app.services.rag_agent_service:35 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 12:09:21.926 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 12:09:21.927 | INFO     | app.services.rag_agent_service:35 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-04 12:09:42.875 | INFO     | app.main:41 - 服务启动中...
+2026-06-04 12:09:42.876 | INFO     | app.services.rag_agent_service:35 - 初始化 Redis 会话记忆：redis://localhost:6379
