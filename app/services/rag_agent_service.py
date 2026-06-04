@@ -34,7 +34,10 @@ class RagAgentService:
             return
 
         logger.info("初始化 Redis 会话记忆：{}", config.redis_url)
-        context = AsyncRedisSaver.from_conn_string(config.redis_url)
+        context = AsyncRedisSaver.from_conn_string(
+            config.redis_url,
+            ttl=self._build_checkpoint_ttl_config(),
+        )
         checkpointer = await context.__aenter__()
         try:
             await checkpointer.asetup()
@@ -136,6 +139,16 @@ class RagAgentService:
         """清空指定会话的全部 checkpoint 状态，无历史时调用同样安全。"""
         await self.initialize_checkpointer()
         await self.checkpointer.adelete_thread(session_id)
+
+    def _build_checkpoint_ttl_config(self) -> dict[str, object] | None:
+        """返回 LangGraph Redis checkpoint 的 TTL 配置；非正数表示持久保存。"""
+        if config.redis_checkpoint_ttl_minutes <= 0:
+            return None
+
+        return {
+            "default_ttl": config.redis_checkpoint_ttl_minutes,
+            "refresh_on_read": config.redis_checkpoint_refresh_on_read,
+        }
 
     def _message_text(self, message: AIMessage | HumanMessage) -> str:
         """提取消息文本：兼容字符串与 content blocks 两种内容形态。"""

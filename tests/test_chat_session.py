@@ -183,7 +183,7 @@ class ClearSessionTest(unittest.TestCase):
 
 
 class RedisCheckpointerLifecycleTest(unittest.TestCase):
-    def test_initialize_checkpointer_sets_up_redis_saver(self) -> None:
+    def test_initialize_checkpointer_sets_up_redis_saver_with_default_ttl(self) -> None:
         service = RagAgentService()
         fake_checkpointer = SimpleNamespace(
             asetup=AsyncMock(),
@@ -197,10 +197,35 @@ class RedisCheckpointerLifecycleTest(unittest.TestCase):
         ) as factory:
             asyncio.run(service.initialize_checkpointer())
 
-        factory.assert_called_once()
+        factory.assert_called_once_with(
+            "redis://localhost:6379",
+            ttl={
+                "default_ttl": 10080,
+                "refresh_on_read": True,
+            },
+        )
         self.assertTrue(fake_context.entered)
         fake_checkpointer.asetup.assert_awaited_once()
         self.assertIs(service.checkpointer, fake_checkpointer)
+
+    def test_initialize_checkpointer_disables_ttl_when_config_is_non_positive(self) -> None:
+        service = RagAgentService()
+        fake_checkpointer = SimpleNamespace(
+            asetup=AsyncMock(),
+            adelete_thread=AsyncMock(),
+        )
+        fake_context = FakeAsyncRedisContext(fake_checkpointer)
+
+        with (
+            patch("app.services.rag_agent_service.config.redis_checkpoint_ttl_minutes", 0),
+            patch(
+                "app.services.rag_agent_service.AsyncRedisSaver.from_conn_string",
+                return_value=fake_context,
+            ) as factory,
+        ):
+            asyncio.run(service.initialize_checkpointer())
+
+        factory.assert_called_once_with("redis://localhost:6379", ttl=None)
 
     def test_close_exits_redis_context_and_resets_agent(self) -> None:
         service = RagAgentService()

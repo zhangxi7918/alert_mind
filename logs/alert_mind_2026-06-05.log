@@ -13,3 +13,13 @@
 2026-06-05 00:04:24.305 | INFO     | app.main:74 - GET /api/session/session_66y9cg65e_1780578472350/history 200 10ms
 2026-06-05 00:04:26.947 | INFO     | app.main:74 - GET /api/session/session_antrjr4hg_1780587864712/history 200 8ms
 2026-06-05 00:04:27.778 | INFO     | app.main:74 - GET /api/session/session_97l1s81zo_1780579058611/history 200 6ms
+2026-06-05 00:27:55.027 | INFO     | app.main:42 - 服务启动中...
+2026-06-05 00:27:55.028 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-05 00:28:32.737 | INFO     | app.main:74 - GET / 200 9ms
+2026-06-05 00:28:32.806 | INFO     | app.main:74 - GET /static/styles.css 200 2ms
+2026-06-05 00:28:32.814 | INFO     | app.main:74 - GET /static/app.js 200 1ms
+2026-06-05 00:28:32.822 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 3ms
+2026-06-05 00:28:36.798 | INFO     | app.main:74 - GET /api/session/session_97l1s81zo_1780579058611/history 200 732ms
+2026-06-05 00:28:37.739 | INFO     | app.main:74 - GET /api/session/session_antrjr4hg_1780587864712/history 200 14ms
+2026-06-05 00:28:38.557 | INFO     | app.main:74 - GET /api/session/session_66y9cg65e_1780578472350/history 200 14ms
+2026-06-05 00:28:39.196 | INFO     | app.main:74 - GET /api/session/session_djdn19am6_1780577379306/history 200 7ms

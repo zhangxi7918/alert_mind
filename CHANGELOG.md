@@ -114,6 +114,10 @@
   - 将 RAG Agent checkpointer 改为 FastAPI lifespan 启动时连接 Redis 并执行 `asetup()`，连接失败时中止启动。
   - 新增 `langgraph-checkpoint-redis` 依赖、`redis_url` 配置和 `.env.example` 示例项。
   - `docker-compose.yml` 增加 Redis 8 服务、AOF 持久化、健康检查和 `redis_data` 数据卷。
+- fix(agent): 为 Redis checkpoint 与可恢复流增加清理策略（2026-06-05）
+  - Checkpoint 默认保留 7 天并读取续期，可通过环境变量关闭或调整。
+  - 可恢复流在终态后设置 TTL，并在启动时清理无法继续生成的 running run。
+  - 兼容旧版本遗留的非 Stream 类型事件键，避免启动清理时因 Redis WRONGTYPE 失败。
 - feat(tools): retrieve_knowledge 检索结果携带来源元数据（2026-06-03）
   - 每段检索结果前添加 `[来源: {_file_name}]` 标注，使 LLM 能在回答中引用具体文档名称。
   - 多段结果之间改用双换行分隔，提升 LLM 对段落边界的识别准确率。
