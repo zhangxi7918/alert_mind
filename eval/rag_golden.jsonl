@@ -23,7 +23,35 @@
 {"id":"kafka_001","query":"Kafka 消费者 lag 持续升高应该怎么处理？","expected_sources":["runbook_kafka_consumer_lag.pdf"],"category":"kafka"}
 {"id":"redis_001","query":"Redis 缓存雪崩时有哪些临时缓解和永久修复措施？","expected_sources":["runbook_redis_cache_avalanche.pdf"],"category":"redis"}
 {"id":"ssl_001","query":"SSL 证书即将过期时应该如何检查和续期？","expected_sources":["runbook_ssl_cert_expiry.docx"],"category":"ssl"}
+{"id":"cpu_004","query":"机器没有明显报错，但 load 一直高，怎么先判断是不是采集毛刺再找占 CPU 的进程？","expected_sources":["runbook_high_cpu.md","reference_prometheus_metrics.md"],"category":"cpu"}
+{"id":"cpu_005","query":"iowait 很高，CPU 告警也在响，我应该直接扩容 CPU 吗？","expected_sources":["reference_prometheus_metrics.md","runbook_high_cpu.md"],"category":"cpu"}
+{"id":"memory_003","query":"free 里 MemFree 很低但 Cached 很高，这算真正内存不足吗？","expected_sources":["runbook_high_memory.md"],"category":"memory"}
+{"id":"memory_004","query":"内存曲线线性上涨且从不回落，Java 服务该留什么证据给研发？","expected_sources":["runbook_high_memory.md"],"category":"memory"}
+{"id":"disk_003","query":"凌晨 MySQL 写不进去，怀疑 binlog 把主节点磁盘打满，应该参考哪次事故和什么处置手册？","expected_sources":["postmortem_2024_db_outage.md","runbook_disk_space.md"],"category":"disk"}
+{"id":"disk_004","query":"为什么只看 80% 磁盘阈值可能不够，还要看增长速率预测？","expected_sources":["postmortem_2024_db_outage.md"],"category":"disk"}
+{"id":"timeout_003","query":"接口 P99 到 6 秒同时错误率上升，应该先看哪些上游依赖以及是否降级？","expected_sources":["runbook_service_timeout.md"],"category":"service_timeout"}
+{"id":"timeout_004","query":"Java 服务变慢但数据库看起来正常，怀疑 GC pause，应该查哪些日志？","expected_sources":["runbook_service_timeout.md","runbook_jvm_full_gc.docx"],"category":"service_timeout"}
+{"id":"network_003","query":"只有一个服务到目标 IP 延迟高，其他链路没问题，排查方向是什么？","expected_sources":["runbook_network_latency.md"],"category":"network"}
+{"id":"network_004","query":"高并发后开始丢包，nf_conntrack_count 接近上限怎么办？","expected_sources":["runbook_network_latency.md"],"category":"network"}
+{"id":"container_003","query":"容器退出码 137，重启次数一直涨，应该从内存还是启动依赖查起？","expected_sources":["runbook_container_restart.md","runbook_high_memory.md"],"category":"container"}
+{"id":"container_004","query":"服务一直 CrashLoop，但日志只有上一次启动失败信息，怎么看 previous logs？","expected_sources":["runbook_container_restart.md"],"category":"container"}
+{"id":"db_003","query":"too many connections 报错，除了调 max_connections 还要怎么找连接泄漏？","expected_sources":["runbook_db_connection_pool.md"],"category":"database"}
+{"id":"db_004","query":"主从 VIP 已经漂移但应用仍写旧主库，连接池需要补什么机制？","expected_sources":["postmortem_2024_db_outage.md","runbook_db_connection_pool.md"],"category":"database"}
+{"id":"prometheus_003","query":"想看 HTTP P99 而不是平均延迟，PromQL 应该用什么指标和函数？","expected_sources":["reference_prometheus_metrics.md","runbook_service_timeout.md"],"category":"prometheus"}
+{"id":"prometheus_004","query":"每周巡检基线报告应该覆盖哪些系统和业务指标？","expected_sources":["reference_prometheus_metrics.md"],"category":"prometheus"}
+{"id":"alert_002","query":"同一实例同时触发 Warning 和 Critical，怎么避免告警风暴？","expected_sources":["reference_alert_rules.md"],"category":"alert_rules"}
+{"id":"alert_003","query":"持续告警不要一直刷屏，重复通知间隔在哪里配置？","expected_sources":["reference_alert_rules.md"],"category":"alert_rules"}
+{"id":"postmortem_003","query":"大促时把 rag_top_k 从 5 调到 2，是为了解决什么瓶颈？","expected_sources":["postmortem_2024_black_friday.md"],"category":"postmortem"}
+{"id":"topology_002","query":"知识库检索失败但 LLM 仍可用，可能是哪一层依赖坏了？","expected_sources":["reference_service_topology.md"],"category":"topology"}
+{"id":"customer_service_001","query":"机器人回答信心不足时，低于多少会建议转人工？","expected_sources":["# 云杉智能客服平台使用手册.md"],"category":"customer_service"}
+{"id":"customer_service_002","query":"客服主管能编辑知识库吗，能不能改系统级 API 配置？","expected_sources":["# 云杉智能客服平台使用手册.md"],"category":"customer_service"}
+{"id":"customer_service_003","query":"上传文档后为什么不能马上搜到，索引一般多久更新？","expected_sources":["# 云杉智能客服平台使用手册.md"],"category":"customer_service"}
 {"id":"negative_001","query":"今天上海天气怎么样？","expected_sources":[],"category":"negative"}
 {"id":"negative_002","query":"帮我写一首关于夏天的诗","expected_sources":[],"category":"negative"}
 {"id":"negative_003","query":"Python 里怎么反转一个列表？","expected_sources":[],"category":"negative"}
 {"id":"negative_004","query":"推荐几家附近适合约会的餐厅","expected_sources":[],"category":"negative"}
+{"id":"negative_005","query":"怎么在 Kubernetes 里写 HPA 根据 QPS 自动扩容？","expected_sources":[],"category":"negative"}
+{"id":"negative_006","query":"Grafana dashboard 变量怎么配置成多选下拉？","expected_sources":[],"category":"negative"}
+{"id":"negative_007","query":"ClickHouse 分区表太多怎么合并优化？","expected_sources":[],"category":"negative"}
+{"id":"negative_008","query":"微信小程序订阅消息模板怎么申请？","expected_sources":[],"category":"negative"}
+{"id":"negative_009","query":"写一个 SQL 查询最近 7 天每天新增用户数","expected_sources":[],"category":"negative"}

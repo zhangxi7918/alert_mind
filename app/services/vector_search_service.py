@@ -26,10 +26,14 @@ class VectorSearchService:
         return results
 
     def _search_with_rerank(self, query: str) -> list[Document]:
-        # 粗召回：取更多候选，不做 score 过滤（交给 reranker 判断）
-        candidates = self.store_manager.similarity_search(query, k=config.rag_rerank_top_n)
+        # 粗召回先保留向量相关性门槛，避免 reranker 在无关候选里强行选 top-k。
+        candidates = self.store_manager.similarity_search(
+            query,
+            k=config.rag_rerank_top_n,
+            score_threshold=config.rag_score_threshold,
+        )
         if not candidates:
-            logger.warning("知识库粗召回无结果：{}", query)
+            logger.warning("知识库粗召回无相关结果（threshold={:.2f}）：{}", config.rag_score_threshold, query)
             return []
         return rerank_service.rerank(query, candidates, top_n=config.rag_top_k, model=config.rag_rerank_model)
 
