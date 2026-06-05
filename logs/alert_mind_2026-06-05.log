@@ -35,3 +35,15 @@
 2026-06-05 00:30:34.980 | INFO     | app.main:74 - GET /static/styles.css 200 5ms
 2026-06-05 00:30:34.981 | INFO     | app.main:74 - GET /static/app.js 200 4ms
 2026-06-05 00:30:35.003 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 1ms
+2026-06-05 00:36:08.806 | INFO     | app.main:42 - 服务启动中...
+2026-06-05 00:36:08.808 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-05 10:30:56.540 | INFO     | app.main:42 - 服务启动中...
+2026-06-05 10:30:56.542 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-05 17:46:37.464 | INFO     | app.main:74 - GET / 200 47ms
+2026-06-05 17:46:37.695 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 18ms
+2026-06-05 17:46:37.719 | INFO     | app.main:74 - GET /static/styles.css 200 82ms
+2026-06-05 17:46:37.722 | INFO     | app.main:74 - GET /static/app.js 200 66ms
+2026-06-05 17:48:59.749 | INFO     | app.main:74 - GET / 200 19ms
+2026-06-05 17:48:59.911 | INFO     | app.main:74 - GET /static/styles.css 200 6ms
+2026-06-05 17:48:59.913 | INFO     | app.main:74 - GET /static/app.js 200 4ms
+2026-06-05 17:48:59.965 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 21ms

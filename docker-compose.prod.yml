@@ -1,0 +1,57 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
+        UV_DEFAULT_INDEX: ${UV_DEFAULT_INDEX:-https://pypi.tuna.tsinghua.edu.cn/simple}
+    image: alert-mind-app:latest
+    container_name: alert_mind_app
+    env_file:
+      - .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 9000
+      REDIS_URL: redis://redis:6379
+      MILVUS_HOST: milvus-standalone
+      MILVUS_PORT: 19530
+      MCP_MONITOR_URL: http://monitor-server:8004/mcp
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      milvus-standalone:
+        condition: service_healthy
+      monitor-server:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9000/health', timeout=5).read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  monitor-server:
+    build:
+      context: .
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
+        UV_DEFAULT_INDEX: ${UV_DEFAULT_INDEX:-https://pypi.tuna.tsinghua.edu.cn/simple}
+    image: alert-mind-app:latest
+    container_name: alert_mind_monitor_server
+    env_file:
+      - .env
+    environment:
+      PROMETHEUS_BASE_URL: http://prometheus:9090
+      FASTMCP_HOST: 0.0.0.0
+      FASTMCP_PORT: 8004
+    command: ["python", "mcp_servers/monitor_server.py"]
+    depends_on:
+      prometheus:
+        condition: service_started
+    restart: unless-stopped

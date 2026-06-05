@@ -1,3 +1,11 @@
+## 部署配置
+
+- feat(deploy): 添加生产 Docker Compose 部署配置（2026-06-05）
+  - 新增 `Dockerfile`、`.dockerignore` 与 `docker-compose.prod.yml`，支持将 FastAPI 主服务和 MCP 监控服务纳入 Compose 托管。
+  - 生产 Compose 覆盖 Redis、Milvus、MCP 和 Prometheus 的容器内服务地址，避免容器中误连 `localhost`。
+  - MCP 服务改为监听 `0.0.0.0`，便于主应用容器通过 Compose 网络访问。
+  - Docker 构建支持通过 `PIP_INDEX_URL` 和 `UV_DEFAULT_INDEX` 使用镜像源，降低国内服务器依赖安装失败概率。
+
 ## RAG 评测
 
 - feat(rag-eval): 添加 source-level 检索评测脚本与 golden dataset（2026-06-04）
