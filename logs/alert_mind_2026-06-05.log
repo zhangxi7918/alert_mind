@@ -47,3 +47,5 @@
 2026-06-05 17:48:59.911 | INFO     | app.main:74 - GET /static/styles.css 200 6ms
 2026-06-05 17:48:59.913 | INFO     | app.main:74 - GET /static/app.js 200 4ms
 2026-06-05 17:48:59.965 | INFO     | app.main:74 - GET /.well-known/appspecific/com.chrome.devtools.json 404 21ms
+2026-06-05 17:50:14.831 | INFO     | app.main:42 - 服务启动中...
+2026-06-05 17:50:14.832 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379

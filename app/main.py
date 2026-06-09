@@ -14,6 +14,7 @@ from app.api import aiops
 from app.api import chat
 from app.api import file
 from app.api import health
+from app.api import unified
 from app.config import config
 from app.services.rag_agent_service import rag_agent_service
 from app.services.rag_stream_run_service import rag_stream_run_service
@@ -82,6 +83,7 @@ async def log_requests(request: Request, call_next):
 
 app.include_router(health.router)
 app.include_router(chat.router, prefix="/api", tags=["智能问答"])
+app.include_router(unified.router, prefix="/api", tags=["Unified"])
 app.include_router(file.router, prefix="/api", tags=["文件管理"])
 app.include_router(aiops.router, prefix="/api", tags=["AIOps"])
 

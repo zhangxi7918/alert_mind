@@ -1,0 +1,33 @@
+2026-06-09 12:22:26.381 | INFO     | app.main:43 - 服务启动中...
+2026-06-09 12:22:26.382 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-09 12:23:41.431 | INFO     | app.main:43 - 服务启动中...
+2026-06-09 12:23:41.433 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-09 12:24:05.201 | INFO     | app.main:75 - GET / 200 7ms
+2026-06-09 12:24:05.244 | INFO     | app.main:75 - GET /static/styles.css 200 1ms
+2026-06-09 12:24:05.248 | INFO     | app.main:75 - GET /static/app.js 200 1ms
+2026-06-09 12:24:06.021 | INFO     | app.main:75 - GET /favicon.ico 404 1ms
+2026-06-09 12:24:22.628 | INFO     | app.main:75 - POST /api/chat/unified 200 141ms
+2026-06-09 12:24:24.674 | INFO     | app.services.orchestrator_service:14 - 意图分类：'诊断当前系统异常' → aiops
+2026-06-09 12:24:26.377 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-09 12:24:26.391 | WARNING  | app.agent.aiops.planner:70 - MCP 工具加载失败，planner 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:24:40.648 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:25:16.124 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:25:59.728 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:26:21.759 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:27:03.766 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：16 条 → top 3
+2026-06-09 12:27:48.226 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:28:05.746 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:31:08.137 | INFO     | app.main:75 - POST /api/chat/unified 200 10ms
+2026-06-09 12:31:10.301 | INFO     | app.services.orchestrator_service:14 - 意图分类：'查询 Prometheus 告警或指标' → aiops
+2026-06-09 12:31:11.039 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-09 12:31:11.050 | WARNING  | app.agent.aiops.planner:70 - MCP 工具加载失败，planner 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:31:18.243 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:31:25.762 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-09 12:31:40.815 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:31:42.787 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-09 12:32:01.366 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:32:09.003 | DEBUG    | app.services.rerank_service:36 - Rerank 完成：20 条 → top 3
+2026-06-09 12:32:33.075 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:32:47.439 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:33:14.238 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-09 12:33:23.450 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
