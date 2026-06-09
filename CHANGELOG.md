@@ -1,3 +1,11 @@
+## Multi-Agent Orchestrator
+
+- feat(orchestrator): 添加意图路由层，聊天框自动分发到 RAG 或 AIOps Agent（2026-06-09）
+  - 新增 `app/agent/orchestrator/graph.py`：LangGraph StateGraph + `classify_intent` 节点，单次 LLM 调用返回 `rag`/`aiops`，分类失败自动降级到 `rag`。
+  - 新增 `app/services/orchestrator_service.py`：封装分类调用，统一对外接口。
+  - 新增 `app/api/unified.py`：`POST /api/chat/unified` 端点，先发 `routed_to` 事件，再透传对应 agent 的流式事件序列。
+  - 前端 `sendMessage` 改调 `sendUnifiedMessage`，收到 `routed_to` 后按 `rag`/`aiops` 切换渲染模式；提取 `_processAIOpsStreamEvent` 类方法供两条路径共用。
+
 ## 部署配置
 
 - feat(deploy): 添加生产 Docker Compose 部署配置（2026-06-05）
