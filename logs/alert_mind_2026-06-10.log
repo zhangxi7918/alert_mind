@@ -34,3 +34,91 @@
 2026-06-10 16:08:15.727 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
 2026-06-10 16:08:28.857 | INFO     | app.main:43 - 服务启动中...
 2026-06-10 16:08:28.858 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-10 21:54:46.328 | WARNING  | app.services.rag_agent_service:70 - MCP 工具加载失败，将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:54:46.722 | INFO     | app.main:75 - GET /api/session/session_50l1menw4_1780979045776/history 200 592ms
+2026-06-10 21:54:46.852 | INFO     | app.main:75 - GET /api/session/session_50l1menw4_1780979045776/history 200 3ms
+2026-06-10 21:54:48.063 | INFO     | app.main:75 - GET /api/session/session_kkzvj26mu_1780979466210/history 200 3ms
+2026-06-10 21:54:50.445 | INFO     | app.main:75 - GET / 200 15ms
+2026-06-10 21:54:50.477 | INFO     | app.main:75 - GET /static/styles.css 200 4ms
+2026-06-10 21:54:50.478 | INFO     | app.main:75 - GET /static/app.js 200 3ms
+2026-06-10 21:54:51.120 | INFO     | app.main:75 - GET /api/session/session_kkzvj26mu_1780979466210/history 200 2ms
+2026-06-10 21:55:10.374 | INFO     | app.main:75 - POST /api/chat/unified 200 171ms
+2026-06-10 21:55:11.309 | INFO     | app.services.orchestrator_service:14 - 意图分类：'hi，我是zzz' → aiops
+2026-06-10 21:55:11.683 | WARNING  | app.tools.knowledge_tool:13 - 知识库检索失败，将返回降级提示：<MilvusException: (code=101, message=failed to search: collection not loaded[collection=466668330144022101])>
+2026-06-10 21:55:11.696 | WARNING  | app.agent.aiops.planner:70 - MCP 工具加载失败，planner 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:55:13.584 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:55:16.030 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:55:20.014 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:55:27.041 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:56:05.179 | INFO     | app.main:43 - 服务启动中...
+2026-06-10 21:56:05.180 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-10 21:56:13.978 | INFO     | app.main:75 - GET / 200 15ms
+2026-06-10 21:56:14.020 | INFO     | app.main:75 - GET /static/styles.css 200 4ms
+2026-06-10 21:56:14.021 | INFO     | app.main:75 - GET /static/app.js 200 3ms
+2026-06-10 21:56:19.893 | INFO     | app.main:75 - POST /api/chat/unified 200 141ms
+2026-06-10 21:56:20.845 | WARNING  | app.services.orchestrator_service:17 - 意图分类失败，降级到 rag：1 validation error for IntentClassification
+intent
+  Input should be 'rag' or 'aiops' [type=literal_error, input_value='', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.13/v/literal_error
+2026-06-10 21:56:20.877 | WARNING  | app.services.rag_agent_service:70 - MCP 工具加载失败，将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:57:41.003 | INFO     | app.main:75 - GET / 200 3ms
+2026-06-10 21:57:41.033 | INFO     | app.main:75 - GET /static/styles.css 200 3ms
+2026-06-10 21:57:41.034 | INFO     | app.main:75 - GET /static/app.js 200 2ms
+2026-06-10 21:57:41.283 | INFO     | app.main:75 - GET /api/chat/runs/run_aakkhpx6p_1781099779749/stream 200 4ms
+2026-06-10 21:58:30.682 | INFO     | app.main:75 - POST /api/chat/unified 200 33ms
+2026-06-10 21:58:31.629 | INFO     | app.services.orchestrator_service:14 - 意图分类：'我叫什么？' → aiops
+2026-06-10 21:58:31.971 | WARNING  | app.services.vector_search_service:36 - 知识库粗召回无相关结果（threshold=0.70）：我叫什么？
+2026-06-10 21:58:31.985 | WARNING  | app.agent.aiops.planner:70 - MCP 工具加载失败，planner 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:58:33.417 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:58:43.191 | INFO     | app.main:75 - GET / 200 1ms
+2026-06-10 21:58:43.218 | INFO     | app.main:75 - GET /static/styles.css 200 2ms
+2026-06-10 21:58:43.220 | INFO     | app.main:75 - GET /static/app.js 200 2ms
+2026-06-10 21:58:48.111 | INFO     | app.main:75 - POST /api/chat/unified 200 7ms
+2026-06-10 21:58:48.867 | INFO     | app.services.orchestrator_service:14 - 意图分类：'hi，我叫zz' → aiops
+2026-06-10 21:58:49.178 | WARNING  | app.services.vector_search_service:36 - 知识库粗召回无相关结果（threshold=0.70）：hi，我叫zz
+2026-06-10 21:58:49.420 | WARNING  | app.agent.aiops.planner:70 - MCP 工具加载失败，planner 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:58:50.754 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:59:04.724 | INFO     | app.main:43 - 服务启动中...
+2026-06-10 21:59:04.724 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-10 21:59:13.087 | INFO     | app.main:75 - GET / 200 10ms
+2026-06-10 21:59:13.116 | INFO     | app.main:75 - GET /static/styles.css 200 4ms
+2026-06-10 21:59:13.117 | INFO     | app.main:75 - GET /static/app.js 200 2ms
+2026-06-10 21:59:13.993 | INFO     | app.main:75 - GET / 200 1ms
+2026-06-10 21:59:14.006 | INFO     | app.main:75 - GET /static/styles.css 200 1ms
+2026-06-10 21:59:14.007 | INFO     | app.main:75 - GET /static/app.js 200 1ms
+2026-06-10 21:59:19.341 | INFO     | app.main:75 - POST /api/chat/unified 200 87ms
+2026-06-10 21:59:20.293 | INFO     | app.services.orchestrator_service:14 - 意图分类：'hi，我是zzzz' → aiops
+2026-06-10 21:59:20.673 | WARNING  | app.services.vector_search_service:36 - 知识库粗召回无相关结果（threshold=0.70）：hi，我是zzzz
+2026-06-10 21:59:20.689 | WARNING  | app.agent.aiops.planner:70 - MCP 工具加载失败，planner 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:59:22.687 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:59:25.139 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:59:28.473 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 21:59:32.897 | WARNING  | app.agent.aiops.executor:38 - MCP 工具加载失败，executor 将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 22:02:09.236 | INFO     | app.main:43 - 服务启动中...
+2026-06-10 22:02:09.237 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-10 22:02:42.770 | INFO     | app.main:75 - GET / 200 21ms
+2026-06-10 22:02:42.821 | INFO     | app.main:75 - GET /static/styles.css 200 4ms
+2026-06-10 22:02:42.822 | INFO     | app.main:75 - GET /static/app.js 200 3ms
+2026-06-10 22:02:49.054 | INFO     | app.main:75 - POST /api/chat/unified 200 87ms
+2026-06-10 22:02:50.451 | INFO     | app.services.orchestrator_service:14 - 意图分类：'hi，我是zzz' → rag
+2026-06-10 22:02:50.484 | WARNING  | app.services.rag_agent_service:70 - MCP 工具加载失败，将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 22:03:18.278 | INFO     | app.main:75 - GET / 200 4ms
+2026-06-10 22:03:18.300 | INFO     | app.main:75 - GET /static/styles.css 200 1ms
+2026-06-10 22:03:18.301 | INFO     | app.main:75 - GET /static/app.js 200 1ms
+2026-06-10 22:03:19.467 | INFO     | app.main:75 - GET /api/chat/runs/run_tiqq6x3ox_1781100168960/stream 200 7ms
+2026-06-10 22:03:23.742 | INFO     | app.main:75 - POST /api/chat/unified 200 20ms
+2026-06-10 22:03:24.619 | INFO     | app.services.orchestrator_service:14 - 意图分类：'我是谁？' → rag
+2026-06-10 22:05:57.472 | INFO     | app.main:43 - 服务启动中...
+2026-06-10 22:05:57.473 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-10 22:06:57.575 | INFO     | app.main:75 - GET / 200 6ms
+2026-06-10 22:06:57.603 | INFO     | app.main:75 - GET /static/app.js 200 1ms
+2026-06-10 22:06:57.603 | INFO     | app.main:75 - GET /static/styles.css 200 2ms
+2026-06-10 22:07:05.690 | INFO     | app.main:75 - GET / 200 1ms
+2026-06-10 22:07:05.702 | INFO     | app.main:75 - GET /static/styles.css 200 1ms
+2026-06-10 22:07:05.703 | INFO     | app.main:75 - GET /static/app.js 200 2ms
+2026-06-10 22:07:06.018 | INFO     | app.main:75 - GET /api/chat/runs/run_irtm10idp_1781100203719/stream 200 14ms
+2026-06-10 22:07:17.449 | INFO     | app.main:75 - POST /api/chat/unified 200 101ms
+2026-06-10 22:07:18.392 | INFO     | app.services.orchestrator_service:14 - 意图分类：'hi，我是kkk' → rag
+2026-06-10 22:07:18.408 | WARNING  | app.services.rag_agent_service:70 - MCP 工具加载失败，将仅使用本地工具：ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception) -> ConnectError: All connection attempts failed -> ConnectError: All connection attempts failed
+2026-06-10 22:07:24.955 | INFO     | app.main:75 - POST /api/chat/unified 200 4ms
+2026-06-10 22:07:25.640 | INFO     | app.services.orchestrator_service:14 - 意图分类：'我是谁？' → rag

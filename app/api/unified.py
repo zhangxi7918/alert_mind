@@ -36,11 +36,10 @@ async def unified_chat(
                 question=chat_request.question,
                 run_id=chat_request.run_id,
             )
-            # subscribe() 已返回 JSON 字符串，直接透传
             async for event in rag_stream_run_service.subscribe(run_id):
                 if await http_request.is_disconnected():
                     break
-                yield event
+                yield _json_event(event)
         else:
             stream = aiops_service.run_stream(chat_request.question)
             try:
