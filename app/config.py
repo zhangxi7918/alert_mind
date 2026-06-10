@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     rag_rerank_enabled: bool = False
     rag_rerank_top_n: int = 20
     rag_rerank_model: str = "gte-rerank-v2"
+    # Rerank 后置过滤：relevance_score 低于此值的结果直接丢弃（邻域负例通常 < 0.2，正例通常 > 0.3）
+    rag_rerank_min_score: float = 0.2
 
 config = Settings()
 

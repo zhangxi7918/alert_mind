@@ -8,7 +8,7 @@ DASHSCOPE_RERANK_URL = "https://dashscope.aliyuncs.com/api/v1/services/rerank/te
 
 
 class RerankService:
-    def rerank(self, query: str, documents: list[Document], top_n: int, model: str) -> list[Document]:
+    def rerank(self, query: str, documents: list[Document], top_n: int, model: str, min_score: float = 0.0) -> list[Document]:
         if not documents:
             return []
 
@@ -32,8 +32,8 @@ class RerankService:
 
         results = response.json()["output"]["results"]
         # results 已按 relevance_score 降序排列，index 指向原始 documents 的位置
-        reranked = [documents[r["index"]] for r in results]
-        logger.debug("Rerank 完成：{} 条 → top {}", len(documents), len(reranked))
+        reranked = [documents[r["index"]] for r in results if r["relevance_score"] >= min_score]
+        logger.debug("Rerank 完成：{} 条 → {} 条（min_score={:.2f}）", len(documents), len(reranked), min_score)
         return reranked
 
 
