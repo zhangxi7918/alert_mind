@@ -16,6 +16,21 @@
 
 ## RAG 评测
 
+- fix(rag): 为 reranker 添加后置分数截断，解决邻域负例漏过问题（2026-06-10）
+  - 邻域负例（K8s HPA / Grafana 变量 / ClickHouse）rerank score 均 < 0.17，正例均 > 0.37，分布清晰
+  - `app/config.py` 新增 `rag_rerank_min_score: float = 0.2`
+  - `rerank_service.rerank()` 新增 `min_score` 参数，过滤 relevance_score 低于阈值的结果
+  - `vector_search_service._search_with_rerank()` 传入 `config.rag_rerank_min_score`
+  - 评测结果：negative_pass_rate 44.4% → 100%，overall_pass_rate 91.8% → 92.9%，正例零损失
+
+- feat(eval): 用 RAGAS 生成测试集并扩充黄金集（2026-06-10）
+  - 安装 ragas 0.2.15，适配 DashScope LLM（ChatQwen）和 Embedding，添加 vertexai stub 修复兼容性问题
+  - 新增 `scripts/generate_testset.py`：从知识库文档生成 SingleHop/MultiHop 测试题，输出到 `eval/rag_generated.jsonl`
+  - 新增 `scripts/batch_index_docs.py`：批量将 uploads/ 文档入库，SHA-256 去重幂等执行
+  - 生成 50 条题，人工过滤 9 条低质量题，标注 18 条 multi-hop 的 expected_sources，追加 41 条进黄金集
+  - 黄金集从 57 条扩充到 98 条，新增 capacity/change_freeze/deployment/monitoring/oncall/multi_hop 等类别
+  - overall_pass_rate: 93.0% → 91.8%（正例从 48 扩到 89 条，负例通过率 55.6% → 44.4%）
+
 - feat(rag-eval): 添加 source-level 检索评测脚本与 golden dataset（2026-06-04）
   - 新增 `eval/rag_golden.jsonl`，覆盖 Runbook、Prometheus 指标、告警规则、故障复盘和 negative case。
   - 新增离线评测脚本，按当前 RAG 配置输出 `accuracy@k(hit@k)`、召回率、精确率和 negative pass rate。

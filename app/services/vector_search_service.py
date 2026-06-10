@@ -35,7 +35,12 @@ class VectorSearchService:
         if not candidates:
             logger.warning("知识库粗召回无相关结果（threshold={:.2f}）：{}", config.rag_score_threshold, query)
             return []
-        return rerank_service.rerank(query, candidates, top_n=config.rag_top_k, model=config.rag_rerank_model)
+        return rerank_service.rerank(
+            query, candidates,
+            top_n=config.rag_top_k,
+            model=config.rag_rerank_model,
+            min_score=config.rag_rerank_min_score,
+        )
 
 
 vector_search_service = VectorSearchService(vector_store_manager)

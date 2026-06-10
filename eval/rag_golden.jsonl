@@ -55,3 +55,44 @@
 {"id":"negative_007","query":"ClickHouse 分区表太多怎么合并优化？","expected_sources":[],"category":"negative"}
 {"id":"negative_008","query":"微信小程序订阅消息模板怎么申请？","expected_sources":[],"category":"negative"}
 {"id":"negative_009","query":"写一个 SQL 查询最近 7 天每天新增用户数","expected_sources":[],"category":"negative"}
+{"id": "capacity_001", "query": "谁负责每季度更新容量规划指南的？", "expected_sources": ["capacity_planning_guide.md"], "category": "capacity"}
+{"id": "capacity_002", "query": "当CPU/内寸水位连续7天超过70%时，会触发什么评估？", "expected_sources": ["capacity_planning_guide.md"], "category": "capacity"}
+{"id": "capacity_003", "query": "数据盘（Kafka）的扩容阈值是多少？", "expected_sources": ["capacity_planning_guide.md"], "category": "capacity"}
+{"id": "capacity_004", "query": "在大促期间, 黑五的流量倍数是多少?", "expected_sources": ["capacity_planning_guide.md"], "category": "capacity"}
+{"id": "capacity_005", "query": "基础设施组在扩容申请流程中的职责是什么？", "expected_sources": ["capacity_planning_guide.md"], "category": "capacity"}
+{"id": "capacity_006", "query": "What were the QPS metrics for the 双12 event in 2024-12?", "expected_sources": ["capacity_planning_guide.md"], "category": "capacity"}
+{"id": "change_freeze_001", "query": "在软冻结期间, 如何申请变更?", "expected_sources": ["change_freeze_policy.md"], "category": "change_freeze"}
+{"id": "change_freeze_002", "query": "2025年618大促的冻结时间是什么时候？", "expected_sources": ["change_freeze_policy.md"], "category": "change_freeze"}
+{"id": "change_freeze_003", "query": "工程效能组在与slo错误预算联动中具体负责什么工作？", "expected_sources": ["change_freeze_policy.md"], "category": "change_freeze"}
+{"id": "deployment_001", "query": "How can a Kubernetes Deployment be rolled back to a previous version, and what are the steps involved in this process?", "expected_sources": ["deployment_rollback_guide.md"], "category": "deployment"}
+{"id": "deployment_002", "query": "What steps should be taken to perform a service rollback on a bare metal or VM, and how does this relate to the change_freeze_policy.md?", "expected_sources": ["deployment_rollback_guide.md"], "category": "deployment"}
+{"id": "monitoring_001", "query": "What is the purpose of the Grafana monitoring dashboard?", "expected_sources": ["monitoring_dashboard_guide.md"], "category": "monitoring"}
+{"id": "monitoring_002", "query": "As a Cloud Infrastructure Manager, how does the Golden Signals Overview assist in the initial stages of alert response and problem identification?", "expected_sources": ["monitoring_dashboard_guide.md"], "category": "monitoring"}
+{"id": "monitoring_003", "query": "How are the four golden signals of Google SRE utilized in a global health dashboard?", "expected_sources": ["monitoring_dashboard_guide.md"], "category": "monitoring"}
+{"id": "monitoring_004", "query": "What does a low hit rate in Redis indicate and what can cause it?", "expected_sources": ["monitoring_dashboard_guide.md"], "category": "monitoring"}
+{"id": "monitoring_005", "query": "How to calculate the memory usage ratio of a pod relative to its limit using container_spec_memory_limit_bytes?", "expected_sources": ["monitoring_dashboard_guide.md"], "category": "monitoring"}
+{"id": "monitoring_006", "query": "How to use a matcher to set a silence in Alertmanager for expected alerts?", "expected_sources": ["monitoring_dashboard_guide.md"], "category": "monitoring"}
+{"id": "oncall_004", "query": "2024年3月那次数据库迁移出了什么问题？", "expected_sources": ["oncall_handbook.md"], "category": "oncall"}
+{"id": "oncall_005", "query": "交班时, 对于P2 以上事件有啥要求?", "expected_sources": ["oncall_handbook.md"], "category": "oncall"}
+{"id": "oncall_006", "query": "在查看日志时，我们使用什么工具，并且这个工具安装在哪里？", "expected_sources": ["oncall_handbook.md"], "category": "oncall"}
+{"id": "oncall_007", "query": "How to contact the infrastructure TL during working hours for an upgrade?", "expected_sources": ["oncall_handbook.md"], "category": "oncall"}
+{"id": "oncall_008", "query": "what issues can occur with k8s after upgrading to version 1.27 and how are they being managed?", "expected_sources": ["oncall_handbook.md"], "category": "oncall"}
+{"id": "postmortem_004", "query": "when did the highnetworklatency critical alert happen and what was the p99 response time at that moment?", "expected_sources": ["postmortem_2024_black_friday.md"], "category": "postmortem"}
+{"id": "multi_hop_001", "query": "in the context of monitoring and managing cloud infrastructure, how can high cpu usage be a symptom rather than a cause, and what tool is used to monitor cpu and memory saturation levels?", "expected_sources": ["runbook_high_cpu.md", "reference_prometheus_metrics.md"], "category": "multi_hop"}
+{"id": "multi_hop_002", "query": "磁盘 warning 告警在 2 天前已触发但没有明确的处理时限，最终酿成 P0 事件。那么对于内存不足的情况，当可用内存低于总内存的多少百分比时会触发 warning 级别的告警？", "expected_sources": ["postmortem_2024_db_outage.md", "reference_alert_rules.md"], "category": "multi_hop"}
+{"id": "multi_hop_003", "query": "when oom kill happen, how can i use journalctl to check the log and also, what is the way to clean up old logs using journalctl if they are taking too much space?", "expected_sources": ["runbook_high_memory.md"], "category": "multi_hop"}
+{"id": "multi_hop_004", "query": "What steps should be taken to diagnose and resolve issues with kafka-0, including checking broker health and handling NotLeaderForPartitionException?", "expected_sources": ["runbook_kafka_producer_error.md"], "category": "multi_hop"}
+{"id": "multi_hop_005", "query": "What are the steps to address a situation where the `maxmemory` is not sufficient, and how does the `maxmemory_policy` play a role in this scenario?", "expected_sources": ["runbook_redis_high_memory.md"], "category": "multi_hop"}
+{"id": "multi_hop_006", "query": "How can I use promql to monitor the error rate of a service and the producer request latency in Kafka, and what steps should be taken if there are network connectivity issues between the application and Kafka brokers?", "expected_sources": ["reference_prometheus_metrics.md", "runbook_kafka_producer_error.md"], "category": "multi_hop"}
+{"id": "multi_hop_007", "query": "How can you check for resource availability on nodes and what should you do if the resources are sufficient but the pod still can't be scheduled?", "expected_sources": ["runbook_pod_pending.md"], "category": "multi_hop"}
+{"id": "multi_hop_008", "query": "What steps should be taken to check the upstream status and how can you determine if a 502 or 504 error is occurring in the context of a `GatewayErrorRateHigh` alert?", "expected_sources": ["runbook_5xx_spike.md"], "category": "multi_hop"}
+{"id": "multi_hop_009", "query": "在处理网关错误率飙升的问题时，如果发现服务完全不可用，根据升级路径和告警分级标准，应该采取哪些具体措施？", "expected_sources": ["runbook_5xx_spike.md", "runbook_load_balancer_health.md", "incident_severity_definitions.md"], "category": "multi_hop"}
+{"id": "multi_hop_010", "query": "在全局健康看板中，如何通过内存使用率的变化来监控和响应系统状态？当内存使用率达到不同阈值时，应该采取哪些具体的操作措施？", "expected_sources": ["monitoring_dashboard_guide.md", "runbook_high_memory.md"], "category": "multi_hop"}
+{"id": "multi_hop_011", "query": "在服务响应超时告警触发的情况下，如何通过监控高CPU使用率来快速识别和响应系统接近饱和的问题？", "expected_sources": ["runbook_service_timeout.md", "runbook_high_cpu.md"], "category": "multi_hop"}
+{"id": "multi_hop_012", "query": "在Docker/Kubernetes环境中，如何通过限制容器内存上限来防止单个容器占用过多内存，并检查网络问题以确保系统稳定运行？", "expected_sources": ["runbook_high_memory.md", "runbook_network_latency.md"], "category": "multi_hop"}
+{"id": "multi_hop_013", "query": "根据存储资源的告警阈值和关键监控指标，在磁盘使用率达到92%并触发告警时，系统盘、数据盘（MySQL）和对象存储（OSS）分别处于什么状态？同时，请说明在该时间点前后，哪些关键监控指标出现了异常变化。", "expected_sources": ["capacity_planning_guide.md", "reference_alert_rules.md"], "category": "multi_hop"}
+{"id": "multi_hop_014", "query": "在处理IT故障时，临时缓解措施和根因分析分别包括哪些步骤？", "expected_sources": ["runbook_high_cpu.md", "runbook_service_timeout.md"], "category": "multi_hop"}
+{"id": "multi_hop_015", "query": "在排查服务响应超时的问题时，如何从上游依赖和内部问题两个方面进行根因分析？", "expected_sources": ["runbook_service_timeout.md"], "category": "multi_hop"}
+{"id": "multi_hop_016", "query": "如何通过进程类型分析来判断是否存在内存泄漏问题？", "expected_sources": ["runbook_memory_leak.md", "runbook_high_memory.md"], "category": "multi_hop"}
+{"id": "multi_hop_017", "query": "如何通过内存泄漏分析和排查OOM Kill来解决系统内存不足的问题？", "expected_sources": ["runbook_memory_leak.md", "runbook_high_memory.md"], "category": "multi_hop"}
+{"id": "multi_hop_018", "query": "在排查服务响应超时问题时，如何通过分析进程类型来进一步定位问题？请详细说明针对业务进程、系统进程以及Docker容器CPU暴涨的处理方法。", "expected_sources": ["runbook_service_timeout.md", "runbook_high_cpu.md"], "category": "multi_hop"}
