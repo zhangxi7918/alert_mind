@@ -210,6 +210,12 @@
 
 ## 知识库 Runbook 文档
 
+- feat(knowledge): 大幅扩充知识库文档，引入格式多样性（2026-06-10）
+  - 新增 16 篇文档，覆盖慢查询、Pod 调度、5xx 处理、内存泄漏、DNS 故障、负载均衡、Kafka 生产者等场景
+  - 引入 6 种不同文档风格：SQL 命令密集型、FAQ 问答型、症状决策树型、Checklist 型、纯表格参考型、Wiki 散文型
+  - 新增跨文档关联内容（slo_error_budget ↔ change_freeze_policy ↔ incident_severity_definitions），支持 multi-context 检索测试
+  - 新增文件列表：`runbook_db_slow_query.md` / `runbook_pod_pending.md` / `runbook_5xx_spike.md` / `oncall_handbook.md` / `slo_error_budget.md` / `postmortem_2024_black_friday_v2.md` / `runbook_memory_leak.md` / `runbook_dns_failure.md` / `deployment_rollback_guide.md` / `capacity_planning_guide.md` / `incident_severity_definitions.md` / `runbook_kafka_producer_error.md` / `monitoring_dashboard_guide.md` / `runbook_redis_high_memory.md` / `runbook_load_balancer_health.md` / `change_freeze_policy.md`
+
 - feat(knowledge): 添加四篇运维 Runbook 并上传至向量知识库（2026-06-03）
   - 新增 `uploads/runbook_high_cpu.md`：高 CPU 使用率处理手册，含 Prometheus 查询、进程定位、临时缓解和升级路径。
   - 新增 `uploads/runbook_high_memory.md`：内存不足处理手册，含 `MemAvailable` 说明、OOM Kill 查看命令和 Swap 处置方法。
