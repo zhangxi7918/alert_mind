@@ -1,6 +1,6 @@
 ---
 name: alert-mind-deploy
-description: 将当前仓库中的 AlertMind 项目通过 SSH、rsync 和 Docker Compose 部署到用户的远程服务器。用户要求部署、重新部署、发布、更新或重启服务器上的 AlertMind 时使用。
+description: 将 GitHub main 分支的 AlertMind 项目通过 SSH、Git 和 Docker Compose 部署到用户的远程服务器。用户要求部署、重新部署、发布、更新或重启服务器上的 AlertMind 时使用。
 ---
 
 # AlertMind 部署
@@ -9,45 +9,31 @@ description: 将当前仓库中的 AlertMind 项目通过 SSH、rsync 和 Docker
 
 ## 目标
 
-把当前工作树部署到远程服务器，保留服务器侧的 `.env`、`uploads`、`logs` 和 `volumes`，重新构建 Docker 镜像，启动完整 Compose 栈，然后验证 `/health`。
+把 GitHub 远程仓库 `origin/main` 部署到已经初始化过的远程服务器项目目录，保留服务器侧的 `.env`、`uploads`、`logs`、`volumes` 和 Docker 数据卷，重新构建 Docker 镜像，启动完整 Compose 栈，然后验证 `/health`。
 
-## 一次性本地配置
-
-在开发机器上创建 `.codex/skills/alert-mind-deploy/deploy.local.env`。这个文件已被 Git 和 Docker 构建上下文忽略。
-
-```bash
-ALERT_MIND_DEPLOY_HOST=your.server.ip
-ALERT_MIND_DEPLOY_USER=root
-ALERT_MIND_DEPLOY_PORT=22
-ALERT_MIND_DEPLOY_DIR=/opt/alert_mind
-# ALERT_MIND_SSH_KEY=~/.ssh/id_ed25519
-```
-
-可选覆盖项：
-
-```bash
-ALERT_MIND_COMPOSE_FILES="vector-database.yml docker-compose.yml docker-compose.prod.yml"
-ALERT_MIND_HEALTH_URL=http://127.0.0.1:9000/health
-```
-
-远程服务器必须已经具备 Docker、Docker Compose、SSH 访问能力，并且 `${ALERT_MIND_DEPLOY_DIR}/.env` 中已经配置生产密钥，例如 `DASHSCOPE_API_KEY`。
+远程服务器必须已经具备 Docker、Docker Compose、Git、SSH 访问能力，并且项目目录中已经存在 Git 仓库和生产 `.env`，例如 `DASHSCOPE_API_KEY`。
 
 ## 部署流程
 
-1. 先用 `git status --short` 检查本地状态；不要回滚无关改动。
-2. 验证组合后的 Compose 文件，避免打印完整配置和密钥：
+1. 确认目标服务器、用户、端口和项目目录由本机私有配置或环境变量提供，不在 Skill 中维护具体值。
+2. SSH 到服务器后，脚本会进入已有项目目录；目录不存在或不是 Git 仓库时直接失败，不自动创建新目录。
+3. 从 GitHub 拉取 `origin/main`：
 
 ```bash
-docker compose -f vector-database.yml -f docker-compose.yml -f docker-compose.prod.yml config --services
+git fetch origin main:refs/remotes/origin/main
+git switch main
+git merge --ff-only origin/main
 ```
 
-3. 运行部署脚本：
+如果服务器仓库存在未提交的代码改动，或者本地分支不能 fast-forward 到 `origin/main`，部署会失败，避免静默覆盖服务器上的改动。
+
+4. 运行部署脚本：
 
 ```bash
 bash .codex/skills/alert-mind-deploy/scripts/deploy.sh
 ```
 
-4. 如果脚本提示远程 `.env` 缺失，先 SSH 到服务器，用 `.env.example` 创建 `.env` 并填入生产密钥，然后重新运行脚本。
-5. 完成后汇报应用访问地址、健康检查结果，以及任何未运行或不健康的容器。
+5. 如果脚本提示远程 `.env` 缺失，先 SSH 到服务器，用 `.env.example` 创建 `.env` 并填入生产密钥，然后重新运行脚本。
+6. 完成后汇报部署的 commit、应用访问地址、健康检查结果，以及任何未运行或不健康的容器。
 
-除非用户明确要求，否则不要上传本地 `.env`。
+除非用户明确要求，否则不要上传本地 `.env`，也不要用本地工作树覆盖服务器代码。

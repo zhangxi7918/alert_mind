@@ -1,3 +1,9 @@
+## 项目文档
+
+- docs(readme): 添加中文项目 README（2026-06-12）
+  - 补充项目简介、主要功能、技术栈、本地启动、生产部署和目录结构说明。
+  - 在生产部署章节说明项目内自动化部署 Skill，并保留手动 Docker Compose 命令作为兜底。
+
 ## Multi-Agent Orchestrator
 
 - feat(orchestrator): 添加意图路由层，聊天框自动分发到 RAG 或 AIOps Agent（2026-06-09）
@@ -10,8 +16,9 @@
 
 - feat(deploy): 添加项目内 AlertMind 自动部署 Skill（2026-06-12）
   - 新增 `.codex/skills/alert-mind-deploy/SKILL.md`，使用中文约定以后部署到服务器时优先走项目内 Skill。
-  - 新增部署脚本，通过 SSH + rsync 同步当前工作树，并组合 `vector-database.yml`、`docker-compose.yml`、`docker-compose.prod.yml` 启动完整 Compose 栈。
-  - 忽略本地部署配置文件，避免服务器地址或密钥进入 Git 与 Docker 构建上下文。
+  - 部署脚本改为 SSH 到已有服务器项目目录后拉取 GitHub `origin/main`，避免用本地工作树覆盖服务器代码。
+  - 保留远端 `.env`、`uploads`、`logs`、`volumes` 和 Docker 数据卷，再组合 `vector-database.yml`、`docker-compose.yml`、`docker-compose.prod.yml` 重建完整 Compose 栈。
+  - 简化脚本为单服务器重部署路径；服务器仓库存在未提交改动或不能 fast-forward 到 `origin/main` 时直接失败。
 - feat(deploy): 添加生产 Docker Compose 部署配置（2026-06-05）
   - 新增 `Dockerfile`、`.dockerignore` 与 `docker-compose.prod.yml`，支持将 FastAPI 主服务和 MCP 监控服务纳入 Compose 托管。
   - 生产 Compose 覆盖 Redis、Milvus、MCP 和 Prometheus 的容器内服务地址，避免容器中误连 `localhost`。
