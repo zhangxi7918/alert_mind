@@ -22,6 +22,24 @@ services:
     # macOS 下无法直接挂载 /proc /sys，使用容器内默认路径即可
     restart: unless-stopped
 
+  monitor-server:
+    build:
+      context: .
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
+        UV_DEFAULT_INDEX: ${UV_DEFAULT_INDEX:-https://pypi.tuna.tsinghua.edu.cn/simple}
+    image: alert-mind-app:latest
+    container_name: alert_mind_monitor_server
+    environment:
+      PROMETHEUS_BASE_URL: http://prometheus:9090
+    command: ["python", "mcp_servers/monitor_server.py"]
+    ports:
+      - "8004:8004"
+    depends_on:
+      prometheus:
+        condition: service_started
+    restart: unless-stopped
+
   redis:
     image: redis:8
     container_name: alert_mind_redis

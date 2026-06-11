@@ -11,6 +11,8 @@ wheels/
 
 # Environment
 .env
+.codex/skills/*/*.local.env
+.codex/skills/*/deploy.env
 
 # macOS
 .DS_Store
