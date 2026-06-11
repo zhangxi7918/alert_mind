@@ -7,12 +7,11 @@ from langchain_qwq import ChatQwen
 from loguru import logger
 from pydantic import BaseModel
 
-from app.agent.mcp_client import get_mcp_client_with_retry, load_mcp_tools_safe
 from app.agent.aiops.state import PlanExecuteState
 from app.agent.aiops.streaming import emit_status
+from app.agent.aiops.tool_loader import load_aiops_tools
 from app.agent.aiops.utils import format_tools_description
 from app.config import config, get_dashscope_api_key
-from app.tools import DEFAULT_LOCAL_AGENT_TOOLS
 from app.tools.knowledge_tool import retrieve_knowledge
 
 DASHSCOPE_COMPATIBLE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
@@ -64,12 +63,7 @@ async def planner(state: PlanExecuteState) -> dict[str, List[str]]:
     input_text = state["input"]
     emit_status("正在检索知识库经验并准备诊断计划...")
     experience_docs = await retrieve_knowledge.ainvoke({"query": input_text})
-    mcp_client = await get_mcp_client_with_retry()
-    mcp_tools, error_message = await load_mcp_tools_safe(mcp_client)
-    if error_message:
-        logger.warning("MCP 工具加载失败，planner 将仅使用本地工具：{}", error_message)
-
-    all_tools = [*DEFAULT_LOCAL_AGENT_TOOLS, *mcp_tools]
+    all_tools = await load_aiops_tools("planner")
     tools_description = format_tools_description(all_tools)
     emit_status("知识库与工具信息已就绪，正在生成执行计划...")
 

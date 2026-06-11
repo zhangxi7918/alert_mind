@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 from app.agent.aiops.executor import executor
 from app.agent.aiops.state import PlanExecuteState
+from app.agent.aiops.tool_loader import AIOpsToolLoadError, load_aiops_tools
 from app.services.aiops_service import AIOpsService, _events_from_stream_payload
 
 
@@ -229,10 +230,15 @@ class AIOpsStateAndExecutorTest(unittest.IsolatedAsyncioTestCase):
             patch("app.agent.aiops.executor.emit_status"),
             patch("app.agent.aiops.executor.get_dashscope_api_key", return_value="test-key"),
             patch("app.agent.aiops.executor.ChatQwen"),
-            patch("app.agent.aiops.executor.get_mcp_client_with_retry", new=AsyncMock()),
             patch(
-                "app.agent.aiops.executor.load_mcp_tools_safe",
-                new=AsyncMock(return_value=([], None)),
+                "app.agent.aiops.executor.load_aiops_tools",
+                new=AsyncMock(
+                    return_value=[
+                        SimpleNamespace(name="retrieve_knowledge"),
+                        SimpleNamespace(name="query_active_alerts"),
+                        SimpleNamespace(name="query_metric_history"),
+                    ]
+                ),
             ),
             patch("app.agent.aiops.executor.create_react_agent", return_value=fake_agent),
         ):
@@ -247,6 +253,54 @@ class AIOpsStateAndExecutorTest(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result["plan"], ["生成报告"])
         self.assertEqual(result["past_steps"], [("查告警", "当前没有活跃告警")])
+
+
+class AIOpsToolLoaderTest(unittest.IsolatedAsyncioTestCase):
+    async def test_load_aiops_tools_raises_when_mcp_load_fails(self) -> None:
+        with (
+            patch("app.agent.aiops.tool_loader.get_mcp_client_with_retry", new=AsyncMock()),
+            patch(
+                "app.agent.aiops.tool_loader.load_mcp_tools_safe",
+                new=AsyncMock(return_value=([], "ConnectError: All connection attempts failed")),
+            ),
+        ):
+            with self.assertRaises(AIOpsToolLoadError) as ctx:
+                await load_aiops_tools("planner")
+
+        self.assertIn("监控工具服务不可用", str(ctx.exception))
+
+    async def test_load_aiops_tools_raises_when_required_tool_is_missing(self) -> None:
+        mcp_tools = [SimpleNamespace(name="query_active_alerts", description="")]
+
+        with (
+            patch("app.agent.aiops.tool_loader.get_mcp_client_with_retry", new=AsyncMock()),
+            patch(
+                "app.agent.aiops.tool_loader.load_mcp_tools_safe",
+                new=AsyncMock(return_value=(mcp_tools, None)),
+            ),
+        ):
+            with self.assertRaises(AIOpsToolLoadError) as ctx:
+                await load_aiops_tools("executor")
+
+        self.assertIn("query_metric_history", str(ctx.exception))
+
+    async def test_load_aiops_tools_returns_local_and_mcp_tools(self) -> None:
+        mcp_tools = [
+            SimpleNamespace(name="query_active_alerts", description=""),
+            SimpleNamespace(name="query_metric_history", description=""),
+        ]
+
+        with (
+            patch("app.agent.aiops.tool_loader.get_mcp_client_with_retry", new=AsyncMock()),
+            patch(
+                "app.agent.aiops.tool_loader.load_mcp_tools_safe",
+                new=AsyncMock(return_value=(mcp_tools, None)),
+            ),
+        ):
+            tools = await load_aiops_tools("planner")
+
+        self.assertEqual(tools[0].name, "retrieve_knowledge")
+        self.assertEqual([tool.name for tool in tools[1:]], ["query_active_alerts", "query_metric_history"])
 
 
 if __name__ == "__main__":

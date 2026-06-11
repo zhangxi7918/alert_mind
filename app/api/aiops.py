@@ -7,6 +7,7 @@ from fastapi import APIRouter, Request
 from loguru import logger
 from sse_starlette.sse import EventSourceResponse
 
+from app.agent.aiops.tool_loader import AIOpsToolLoadError
 from app.models.request import AiopsRequest
 from app.services.aiops_service import aiops_service
 
@@ -28,6 +29,15 @@ def _stream_aiops(http_request: Request, input_text: str) -> EventSourceResponse
                 yield _json_event(event)
         except asyncio.CancelledError:
             raise
+        except AIOpsToolLoadError as exc:
+            logger.warning("AIOps 监控工具不可用：{}", exc)
+            yield _json_event(
+                {
+                    "type": "error",
+                    "stage": "error",
+                    "message": str(exc),
+                }
+            )
         except Exception as exc:
             logger.exception("AIOps SSE 流异常中断")
             yield _json_event(
