@@ -8,6 +8,10 @@
 
 ## 部署配置
 
+- feat(deploy): 添加项目内 AlertMind 自动部署 Skill（2026-06-12）
+  - 新增 `.codex/skills/alert-mind-deploy/SKILL.md`，使用中文约定以后部署到服务器时优先走项目内 Skill。
+  - 新增部署脚本，通过 SSH + rsync 同步当前工作树，并组合 `vector-database.yml`、`docker-compose.yml`、`docker-compose.prod.yml` 启动完整 Compose 栈。
+  - 忽略本地部署配置文件，避免服务器地址或密钥进入 Git 与 Docker 构建上下文。
 - feat(deploy): 添加生产 Docker Compose 部署配置（2026-06-05）
   - 新增 `Dockerfile`、`.dockerignore` 与 `docker-compose.prod.yml`，支持将 FastAPI 主服务和 MCP 监控服务纳入 Compose 托管。
   - 生产 Compose 覆盖 Redis、Milvus、MCP 和 Prometheus 的容器内服务地址，避免容器中误连 `localhost`。
@@ -81,6 +85,12 @@
 
 ## 前端聊天界面
 
+- refactor(static): 重构首页空状态并添加运维问题模板（2026-06-12）
+  - 首页空状态改为标题、说明和分组模板组合，区分 AIOps 实时监控与 RAG 知识库问答。
+  - AIOps 模板限定在当前 Prometheus 工具能力内，覆盖活跃告警查询和 CPU / 内存趋势查询。
+  - RAG 模板覆盖高 CPU、数据库慢查询、Kafka 堆积和部署回滚等 Runbook 查询。
+  - 模板点击后自动填入聊天输入框并聚焦，保持由用户确认发送。
+  - 补充分组、模板卡片和移动端布局样式，避免首页内容在窄屏下挤压。
 - feat(static): 添加智能 AlertMind 助手 Web 聊天界面（2026-06-01）
   - 新增 `static/index.html`、`static/app.js` 与 `static/styles.css`，提供侧边栏、聊天区、模式选择、文件上传入口和 AI Ops 操作入口。
   - 前端支持快速问答、流式问答、Markdown/代码高亮渲染、本地历史对话管理与通知反馈。
@@ -240,6 +250,9 @@
 
 ## Prometheus 监控接入
 
+- fix(aiops): 监控 MCP 工具不可用时显式失败（2026-06-12）
+  - AIOps planner/executor 共用工具加载守卫，缺少 `query_active_alerts` 或 `query_metric_history` 时返回 SSE error，避免步骤被误标为已完成。
+  - 开发版 `docker-compose.yml` 增加 `monitor-server` 服务并映射 8004，仅注入 Prometheus 地址，确保本地默认 `MCP_MONITOR_URL` 可连接。
 - feat(prometheus): 添加 Prometheus + Node Exporter 本地监控环境（2026-06-03）
   - 新增 `docker-compose.yml`，定义 `alert_mind_prometheus`（9090）和 `alert_mind_node_exporter`（9100）两个容器。
   - 新增 `prometheus/prometheus.yml`，配置 15s 采集间隔并指向 node_exporter 采集目标。

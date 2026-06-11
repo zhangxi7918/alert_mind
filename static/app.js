@@ -128,6 +128,7 @@ class SuperBizAgentApp {
         this.chatContainer = document.querySelector('.chat-container');
         this.welcomeGreeting = document.getElementById('welcomeGreeting');
         this.chatHistoryList = document.getElementById('chatHistoryList');
+        this.questionTemplateButtons = document.querySelectorAll('.question-template-card');
         
         // 初始化时检查是否需要居中
         this.checkAndSetCentered();
@@ -222,6 +223,27 @@ class SuperBizAgentApp {
         if (this.fileInput) {
             this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
         }
+
+        this.questionTemplateButtons.forEach((button) => {
+            button.addEventListener('click', () => this.applyQuestionTemplate(button));
+        });
+    }
+
+    applyQuestionTemplate(button) {
+        if (this.isStreaming) {
+            this.showNotification('请等待当前对话完成后再选择模板', 'warning');
+            return;
+        }
+
+        const prompt = button.dataset.prompt || '';
+        if (!prompt || !this.messageInput) {
+            return;
+        }
+
+        this.messageInput.value = prompt;
+        this.messageInput.focus();
+        this.closeToolsMenu();
+        this.closeModeDropdown();
     }
 
     // 切换工具菜单显示/隐藏

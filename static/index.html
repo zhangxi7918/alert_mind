@@ -51,7 +51,104 @@
             </button>
             <div class="chat-container">
                 <div class="welcome-greeting" id="welcomeGreeting">
-                    <p>你好！我是智能运维小助手</p>
+                    <div class="welcome-kicker">AlertMind</div>
+                    <h1>智能运维小助手</h1>
+                    <p>选择实时监控分析，或查询知识库里的 Runbook。</p>
+                    <div class="question-template-groups" aria-label="问题模板">
+                        <section class="question-template-section" aria-labelledby="aiopsTemplatesTitle">
+                            <div class="template-section-header">
+                                <span id="aiopsTemplatesTitle">AIOps 实时监控</span>
+                                <small>Prometheus 工具</small>
+                            </div>
+                            <div class="question-template-grid">
+                                <button class="question-template-card" type="button" data-prompt="请使用 query_active_alerts 查询当前 Prometheus 活跃告警，并按严重程度、告警名称和影响对象汇总。">
+                                    <span class="template-icon template-icon-cpu">
+                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="7" y="7" width="10" height="10" rx="2" stroke="currentColor" stroke-width="2"/>
+                                            <path d="M4 9H7M4 15H7M17 9H20M17 15H20M9 4V7M15 4V7M9 17V20M15 17V20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="template-copy">
+                                        <strong>当前活跃告警</strong>
+                                        <small>查询 Prometheus firing / pending 告警</small>
+                                    </span>
+                                </button>
+                                <button class="question-template-card" type="button" data-prompt="请使用 query_metric_history 分别查询过去 60 分钟的 cpu_usage 和 memory_usage 趋势，并给出服务器健康状态摘要。">
+                                    <span class="template-icon template-icon-release">
+                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M4 19V5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                            <path d="M4 19H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                            <path d="M7 15L11 11L14 13L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="template-copy">
+                                        <strong>CPU / 内存趋势</strong>
+                                        <small>查询近 1 小时系统指标</small>
+                                    </span>
+                                </button>
+                            </div>
+                        </section>
+
+                        <section class="question-template-section" aria-labelledby="ragTemplatesTitle">
+                            <div class="template-section-header">
+                                <span id="ragTemplatesTitle">RAG 知识库问答</span>
+                                <small>Runbook / 文档</small>
+                            </div>
+                            <div class="question-template-grid">
+                                <button class="question-template-card" type="button" data-prompt="知识库里的高 CPU Runbook 建议按什么顺序排查？请列出关键检查项和处理动作。">
+                                    <span class="template-icon template-icon-cpu">
+                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M5 4H19V20H5V4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                            <path d="M8 8H16M8 12H16M8 16H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="template-copy">
+                                        <strong>高 CPU Runbook</strong>
+                                        <small>从知识库提取排查步骤</small>
+                                    </span>
+                                </button>
+                                <button class="question-template-card" type="button" data-prompt="数据库慢查询 Runbook 里有哪些常见原因、验证方法和临时止血方案？">
+                                    <span class="template-icon template-icon-db">
+                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <ellipse cx="12" cy="6" rx="7" ry="3" stroke="currentColor" stroke-width="2"/>
+                                            <path d="M5 6V18C5 19.66 8.13 21 12 21C15.87 21 19 19.66 19 18V6" stroke="currentColor" stroke-width="2"/>
+                                            <path d="M5 12C5 13.66 8.13 15 12 15C15.87 15 19 13.66 19 12" stroke="currentColor" stroke-width="2"/>
+                                        </svg>
+                                    </span>
+                                    <span class="template-copy">
+                                        <strong>慢查询 Runbook</strong>
+                                        <small>查询原因、验证和止血措施</small>
+                                    </span>
+                                </button>
+                                <button class="question-template-card" type="button" data-prompt="Kafka consumer lag 文档里建议检查哪些生产端、消费端和下游依赖问题？">
+                                    <span class="template-icon template-icon-stream">
+                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M4 7H12C14.21 7 16 8.79 16 11C16 13.21 14.21 15 12 15H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                            <path d="M8 11L4 15L8 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M18 7H20M18 12H20M16 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="template-copy">
+                                        <strong>Kafka 堆积文档</strong>
+                                        <small>查询 consumer lag 排查点</small>
+                                    </span>
+                                </button>
+                                <button class="question-template-card" type="button" data-prompt="部署回滚指南里，回滚前后分别需要验证哪些指标、日志和用户影响？">
+                                    <span class="template-icon template-icon-release">
+                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M7 7H17V17H7V7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                            <path d="M4 4L7 7M20 4L17 7M4 20L7 17M20 20L17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                            <path d="M10 12H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="template-copy">
+                                        <strong>部署回滚指南</strong>
+                                        <small>查询回滚验证和影响评估</small>
+                                    </span>
+                                </button>
+                            </div>
+                        </section>
+                    </div>
                 </div>
                 <div class="chat-messages" id="chatMessages">
                 </div>
