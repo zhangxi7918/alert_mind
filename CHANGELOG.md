@@ -19,6 +19,7 @@
   - 部署脚本改为 SSH 到已有服务器项目目录后拉取 GitHub `origin/main`，避免用本地工作树覆盖服务器代码。
   - 保留远端 `.env`、`uploads`、`logs`、`volumes` 和 Docker 数据卷，再组合 `vector-database.yml`、`docker-compose.yml`、`docker-compose.prod.yml` 重建完整 Compose 栈。
   - 简化脚本为单服务器重部署路径；服务器仓库存在未提交改动或不能 fast-forward 到 `origin/main` 时直接失败。
+  - 兼容默认用户部署场景，Docker socket 无直接权限时自动使用无密码 `sudo docker`。
 - feat(deploy): 添加生产 Docker Compose 部署配置（2026-06-05）
   - 新增 `Dockerfile`、`.dockerignore` 与 `docker-compose.prod.yml`，支持将 FastAPI 主服务和 MCP 监控服务纳入 Compose 托管。
   - 生产 Compose 覆盖 Redis、Milvus、MCP 和 Prometheus 的容器内服务地址，避免容器中误连 `localhost`。

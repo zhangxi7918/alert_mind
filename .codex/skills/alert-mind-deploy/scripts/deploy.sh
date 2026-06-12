@@ -48,13 +48,22 @@ git merge --ff-only origin/main
 deployed_commit="$(git rev-parse --short HEAD)"
 echo "Deploying commit: ${deployed_commit}"
 
-docker compose \
+if docker ps >/dev/null 2>&1; then
+  DOCKER=(docker)
+elif sudo -n docker ps >/dev/null 2>&1; then
+  DOCKER=(sudo docker)
+else
+  echo "Current user cannot access Docker. Add it to the docker group or configure passwordless sudo." >&2
+  exit 30
+fi
+
+"${DOCKER[@]}" compose \
   -f vector-database.yml \
   -f docker-compose.yml \
   -f docker-compose.prod.yml \
   up -d --build
 
-docker compose \
+"${DOCKER[@]}" compose \
   -f vector-database.yml \
   -f docker-compose.yml \
   -f docker-compose.prod.yml \
