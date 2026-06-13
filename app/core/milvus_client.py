@@ -34,6 +34,7 @@ class MilvusClientManager:
         else:
             self.collection = Collection(COLLECTION_NAME, using=CONNECTION_ALIAS)
 
+        self._ensure_vector_index(self.collection)
         self.collection.load()
 
     def close(self) -> None:
@@ -51,6 +52,20 @@ class MilvusClientManager:
 
     def _collection_exists(self) -> bool:
         return utility.has_collection(COLLECTION_NAME, using=CONNECTION_ALIAS)
+
+    def _ensure_vector_index(self, collection: Collection) -> None:
+        if any(index.field_name == "vector" for index in collection.indexes):
+            return
+
+        collection.create_index(
+            field_name="vector",
+            index_params={
+                "index_type": "IVF_FLAT",
+                "metric_type": "L2",
+                "params": {"nlist": VECTOR_INDEX_NLIST},
+            },
+            index_name=VECTOR_INDEX_NAME,
+        )
 
     def _create_collection(self) -> Collection:
         fields = [
@@ -81,15 +96,6 @@ class MilvusClientManager:
             name=COLLECTION_NAME,
             schema=schema,
             using=CONNECTION_ALIAS,
-        )
-        collection.create_index(
-            field_name="vector",
-            index_params={
-                "index_type": "IVF_FLAT",
-                "metric_type": "L2",
-                "params": {"nlist": VECTOR_INDEX_NLIST},
-            },
-            index_name=VECTOR_INDEX_NAME,
         )
 
         return collection

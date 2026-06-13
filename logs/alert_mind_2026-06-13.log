@@ -1,0 +1,10 @@
+2026-06-13 15:12:15.583 | INFO     | app.main:75 - GET / 200 31ms
+2026-06-13 15:22:42.273 | INFO     | app.main:75 - GET / 200 5ms
+2026-06-13 15:22:42.335 | INFO     | app.main:75 - GET /static/styles.css 200 8ms
+2026-06-13 15:22:42.340 | INFO     | app.main:75 - GET /static/app.js 200 7ms
+2026-06-13 15:22:48.898 | INFO     | app.main:75 - GET /api/session/session_oq2rf3ql8_1781197849319/history 200 73ms
+2026-06-13 15:24:55.429 | INFO     | app.main:75 - GET /health 200 9ms
+2026-06-13 15:25:04.829 | INFO     | app.main:75 - GET / 200 1ms
+2026-06-13 15:26:40.295 | INFO     | app.main:75 - GET /health 200 2ms
+2026-06-13 15:43:11.391 | INFO     | app.main:43 - 服务启动中...
+2026-06-13 15:43:11.391 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379

@@ -8,3 +8,12 @@
 2026-06-12 01:19:29.541 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
 2026-06-12 01:19:40.500 | INFO     | app.main:43 - 服务启动中...
 2026-06-12 01:19:40.501 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-12 13:48:41.446 | INFO     | app.main:43 - 服务启动中...
+2026-06-12 13:48:41.447 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-12 13:49:59.649 | INFO     | app.main:43 - 服务启动中...
+2026-06-12 13:49:59.650 | INFO     | app.services.rag_agent_service:36 - 初始化 Redis 会话记忆：redis://localhost:6379
+2026-06-12 13:50:05.503 | INFO     | app.main:75 - GET / 200 6ms
+2026-06-12 13:50:05.577 | INFO     | app.main:75 - GET /static/styles.css 200 4ms
+2026-06-12 13:50:05.578 | INFO     | app.main:75 - GET /static/app.js 200 2ms
+2026-06-12 13:50:08.432 | INFO     | app.main:75 - GET /favicon.ico 404 2ms
+2026-06-12 13:50:08.509 | INFO     | app.main:75 - GET /api/session/session_oq2rf3ql8_1781197849319/history 200 879ms
