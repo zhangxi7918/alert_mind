@@ -55,6 +55,21 @@
 {"id":"negative_007","query":"ClickHouse 分区表太多怎么合并优化？","expected_sources":[],"category":"negative"}
 {"id":"negative_008","query":"微信小程序订阅消息模板怎么申请？","expected_sources":[],"category":"negative"}
 {"id":"negative_009","query":"写一个 SQL 查询最近 7 天每天新增用户数","expected_sources":[],"category":"negative"}
+{"id":"negative_010","query":"Kubernetes HPA 根据 QPS 自动扩容时，External Metrics Adapter 应该怎么配置？","expected_sources":[],"category":"negative"}
+{"id":"negative_011","query":"Grafana 面板变量怎么用正则过滤 namespace 和 pod 名称？","expected_sources":[],"category":"negative"}
+{"id":"negative_012","query":"ClickHouse MergeTree 表 parts 太多导致写入变慢，应该怎么合并和调优？","expected_sources":[],"category":"negative"}
+{"id":"negative_013","query":"Elasticsearch 集群 yellow 状态时，怎么迁移 shard 并恢复副本？","expected_sources":[],"category":"negative"}
+{"id":"negative_014","query":"Nginx Ingress 怎么配置 WebSocket 连接的 proxy_read_timeout？","expected_sources":[],"category":"negative"}
+{"id":"negative_015","query":"Terraform apply 失败提示 state lock，怎么安全解锁？","expected_sources":[],"category":"negative"}
+{"id":"negative_016","query":"Argo CD 应用一直卡在 Progressing，应该怎么排查 sync hook？","expected_sources":[],"category":"negative"}
+{"id":"negative_017","query":"Istio sidecar 注入后 mTLS 握手失败，应该检查哪些证书和策略？","expected_sources":[],"category":"negative"}
+{"id":"negative_018","query":"Kafka topic 分区数怎么在线扩容，并把副本重新均衡到新 broker？","expected_sources":[],"category":"negative"}
+{"id":"negative_019","query":"Redis Cluster slot 迁移时 MOVED 和 ASK 重定向过多怎么处理？","expected_sources":[],"category":"negative"}
+{"id":"negative_020","query":"Prometheus remote_write 到 Thanos Receive 出现积压，应该怎么调队列参数？","expected_sources":[],"category":"negative"}
+{"id":"negative_021","query":"PostgreSQL VACUUM 卡住导致表膨胀，怎么定位 long transaction？","expected_sources":[],"category":"negative"}
+{"id":"negative_022","query":"OpenTelemetry Collector 丢 trace 数据时，batch 和 memory_limiter 怎么调？","expected_sources":[],"category":"negative"}
+{"id":"negative_023","query":"RabbitMQ 队列堆积时，consumer prefetch 和 ack 策略应该怎么设置？","expected_sources":[],"category":"negative"}
+{"id":"negative_024","query":"iptables NAT 表规则顺序导致端口转发不生效，应该怎么排查？","expected_sources":[],"category":"negative"}
 {"id": "capacity_001", "query": "谁负责每季度更新容量规划指南的？", "expected_sources": ["capacity_planning_guide.md"], "category": "capacity"}
 {"id": "capacity_002", "query": "当CPU/内寸水位连续7天超过70%时，会触发什么评估？", "expected_sources": ["capacity_planning_guide.md"], "category": "capacity"}
 {"id": "capacity_003", "query": "数据盘（Kafka）的扩容阈值是多少？", "expected_sources": ["capacity_planning_guide.md"], "category": "capacity"}

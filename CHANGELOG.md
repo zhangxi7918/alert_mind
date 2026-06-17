@@ -28,6 +28,10 @@
 
 ## RAG 评测
 
+- test(rag-eval): 扩充近域负例测试样本（2026-06-15）
+  - 将 golden dataset 的负例从 9 条扩充到 24 条，提高无关问题过滤评估占比。
+  - 新增 Kubernetes、Grafana、ClickHouse、Istio、Thanos、OpenTelemetry 等近域但库外问题，减少负例过于明显带来的乐观偏差。
+
 - fix(rag): 为 reranker 添加后置分数截断，解决邻域负例漏过问题（2026-06-10）
   - 邻域负例（K8s HPA / Grafana 变量 / ClickHouse）rerank score 均 < 0.17，正例均 > 0.37，分布清晰
   - `app/config.py` 新增 `rag_rerank_min_score: float = 0.2`

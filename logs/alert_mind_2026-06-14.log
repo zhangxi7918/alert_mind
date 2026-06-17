@@ -1,0 +1,4 @@
+2026-06-14 23:09:07.485 | INFO     | app.main:75 - GET / 200 22ms
+2026-06-14 23:09:07.549 | INFO     | app.main:75 - GET /static/styles.css 200 13ms
+2026-06-14 23:09:07.550 | INFO     | app.main:75 - GET /static/app.js 200 10ms
+2026-06-14 23:09:09.747 | INFO     | app.main:75 - GET /api/session/session_oq2rf3ql8_1781197849319/history 200 937ms
