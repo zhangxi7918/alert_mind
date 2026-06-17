@@ -103,30 +103,31 @@
 
 - 当用户要求部署、重新部署、发布或更新 AlertMind 到服务器时，先读取 `.codex/skills/alert-mind-deploy/SKILL.md`，再按其中流程执行。
 
+# 多 Agent 协作
 
+适用场景：一个任务能拆成 2 个以上、目标路径互不重叠的子任务时，才启用多 agent；单一责任区内的小改动不要为了用多 agent 而强行拆分。判据是路径是否重叠，不是文件数量或"算不算同一模块"——路径重叠就必须串行，不重叠才有并行的意义。
 
-# Multi-Agent Policy
+## 角色与责任区
 
-对于中大型任务，先评估是否适合多 Agent。
+定义在 `.codex/agents/`，每个角色固定负责一块路径：
 
-适合使用多 Agent 的情况：
-- 涉及 RAG、AIOps、前端、测试等多个模块
-- 需要先探索影响范围，再实现，再补测试，再 review
-- 任务会修改多个文件或多个包
-- 用户明确要求多 Agent、并行处理、spawn agents
+| Agent | 责任区 | sandbox_mode |
+| --- | --- | --- |
+| `code_mapper` | 只读，分析影响范围/调用链 | read-only |
+| `rag_worker` | `app/services/{rag_*,document_*,rerank_service,vector_*}.py`、`app/tools/knowledge_tool.py`、`app/core/milvus_client.py`、`app/api/{chat,file}.py`、`eval/` | workspace-write |
+| `aiops_worker` | `app/agent/aiops/`、`app/services/aiops_service.py`、`app/api/aiops.py` | workspace-write |
+| `frontend_worker` | `static/` | workspace-write |
+| `reviewer` | 只读，收尾审查 diff | read-only |
 
-不适合使用多 Agent 的情况：
-- 单文件小修复
-- 只需要运行一个命令
-- 多个 Agent 会同时修改同一批核心文件
-- 需求边界不清楚，必须先澄清
+`app/config.py`、`app/main.py`、`app/models/`、`app/utils/`、`app/agent/mcp_client.py`、`app/agent/orchestrator/`、`app/services/orchestrator_service.py`、`app/api/{unified,health}.py`、`tests/`、`AGENTS.md`、`CLAUDE.md`、`CHANGELOG.md` 不分配给任何 worker，视为共享区。
 
-执行流程：
-1. 先让 `code_mapper` 只读分析影响范围和文件边界。
-2. 根据模块归属分配给 `rag_worker`、`aiops_worker`、`frontend_worker`。
-3. 同时让 `test_reviewer` 检查测试缺口和回归风险。
-4. 子 Agent 不得回滚其他人的改动。
-5. 主 Agent 负责整合 diff、解决冲突、运行最终测试。
-6. 最终输出每个 Agent 的工作、改动文件、测试结果和剩余风险。
+## 执行顺序
 
-写重型并行任务优先使用 Codex App worktree 隔离；读多写少的探索、测试、审查任务可以使用 subagents。
+1. `code_mapper` 先跑，确认任务能否拆分、是否触达共享区。
+2. 能拆分且不触达共享区：按责任区并发派发给对应 worker。
+3. 触达共享区：先停掉并发，由发起者本人或单个 worker 串行处理共享区改动，处理完再恢复其余 worker 并发——sandbox_mode 只有 `read-only`/`workspace-write` 两档，没有路径级隔离，并发写共享区等同于多人同时改同一份文件，必须避免。
+4. 所有 worker 完成后，`reviewer` 收尾检查越界、过度设计、CHANGELOG 同步情况。
+
+## 跨会话物理并行
+
+同一 Codex/Claude 会话内派发的多个 agent 共享同一个工作目录，没有文件系统级隔离，靠上面的责任区约定避免冲突。如果要让多个任务真正物理隔离地并行跑（例如两个持续数小时、互不依赖的大功能），改用 `git worktree` 给每个任务开独立目录和分支，而不是在同一个 session 里 fan-out——worktree 解决"会不会互相覆盖文件"，上面的角色划分解决"该不该让某个 agent 改这块"，两者不能互相替代。

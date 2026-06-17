@@ -1,3 +1,11 @@
+## Agent 行为准则
+
+- docs(agents): 重写 Multi-Agent Policy 并落地 `.codex/agents/` 角色定义（2026-06-17）
+  - 判据从"≥3 文件/跨模块"改为"目标路径是否重叠"，路径重叠就必须串行，不靠主观判断。
+  - 新增 `.codex/agents/{code_mapper,rag_worker,aiops_worker,frontend_worker,reviewer}.toml`，按 alert_mind 实际目录划定责任区（RAG 链路 / AIOps 链路 / 前端 / 共享区），角色可被 Codex 直接调用，不再是纯文字描述。
+  - 明确 sandbox_mode 只有 read-only/workspace-write 两档、没有路径级隔离，触达共享区必须停掉并发串行处理，不依赖"agent 间不冲突"的君子协定。
+  - 区分会话内 fan-out（靠责任区约定避免冲突，无物理隔离）与跨会话 `git worktree`（物理隔离，用于独立大功能），两者不能互相替代。
+
 ## 项目文档
 
 - docs(readme): 添加中文项目 README（2026-06-12）
